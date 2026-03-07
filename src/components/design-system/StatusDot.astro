@@ -1,0 +1,25 @@
+---
+interface Props {
+  status: 'active' | 'planned' | 'dependency';
+}
+
+const { status } = Astro.props;
+
+const colorMap = {
+  active: 'var(--green)',
+  planned: 'var(--yellow)',
+  dependency: 'var(--orange)',
+};
+---
+
+<span class="status-dot" style={`background: ${colorMap[status]}`} title={status}></span>
+
+<style>
+  .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+</style>

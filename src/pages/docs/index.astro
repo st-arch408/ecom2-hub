@@ -1,0 +1,301 @@
+---
+import Default from '../../layouts/Default.astro';
+import MetricBadge from '../../components/design-system/MetricBadge.astro';
+import { getCollection } from 'astro:content';
+
+const docs = await getCollection('prfaq');
+const sortedDocs = docs.sort((a, b) => {
+  const dateA = a.data.date || '';
+  const dateB = b.data.date || '';
+  return dateB.localeCompare(dateA);
+});
+
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+
+const statusColors: Record<string, string> = {
+  draft: 'var(--text-dim)',
+  review: 'var(--yellow)',
+  approved: 'var(--green)',
+  shipped: 'var(--accent)',
+};
+
+const workstreamColors: Record<string, string> = {
+  'ecom2-core': 'var(--blue)',
+  'atb-blue': 'var(--blue)',
+  builds: 'var(--green)',
+  'template-library': 'var(--green)',
+  jobs: 'var(--blue)',
+  'delivery-tracking': 'var(--purple)',
+  crm: 'var(--purple)',
+  payments: 'var(--purple)',
+  other: 'var(--text-dim)',
+};
+---
+
+<Default title="Documents">
+  <div class="docs-page">
+    <div class="docs-header">
+      <h1 class="docs-title">PR/FAQ Documents</h1>
+      <p class="docs-subtitle">Working Backwards documents rendered with QXO Dark Intelligence styling. Drop a <code>.md</code> file into <code>src/content/prfaq/</code> to add a new document.</p>
+    </div>
+
+    {sortedDocs.length === 0 ? (
+      <div class="docs-empty">
+        <p>No documents yet. Add markdown files to <code>src/content/prfaq/</code> to get started.</p>
+      </div>
+    ) : (
+      <Fragment>
+        <div class="docs-filters" id="docsFilters">
+          <div class="filter-group">
+            <label class="filter-label">Workstream</label>
+            <select class="filter-select" id="filterWorkstream">
+              <option value="">All</option>
+              <option value="atb-blue">ATB Blue</option>
+              <option value="builds">Builds</option>
+              <option value="jobs">Jobs</option>
+              <option value="delivery-tracking">Delivery Tracking</option>
+              <option value="ecom2-core">Ecom 2.0 Core</option>
+              <option value="crm">CRM</option>
+              <option value="payments">Payments</option>
+              <option value="template-library">Template Library</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select class="filter-select" id="filterStatus">
+              <option value="">All</option>
+              <option value="draft">Draft</option>
+              <option value="review">Review</option>
+              <option value="approved">Approved</option>
+              <option value="shipped">Shipped</option>
+            </select>
+          </div>
+        </div>
+      <div class="docs-grid" id="docsGrid">
+        {sortedDocs.map((doc) => (
+          <a href={`${base}docs/${doc.slug}`} class="doc-card-link" data-workstream={doc.data.workstream || ''} data-status={doc.data.status || 'draft'}>
+            <div class="doc-card">
+              <h3 class="doc-title">{doc.data.title || doc.slug}</h3>
+              <div class="doc-badges">
+                {doc.data.version && <MetricBadge text={`v${doc.data.version}`} />}
+                {doc.data.status && (
+                  <span class="doc-status" style={`color: ${statusColors[doc.data.status]}`}>
+                    {doc.data.status}
+                  </span>
+                )}
+                {doc.data.workstream && (
+                  <span class="doc-workstream" style={`color: ${workstreamColors[doc.data.workstream] || 'var(--text-dim)'}`}>
+                    {doc.data.workstream}
+                  </span>
+                )}
+              </div>
+              {doc.data.owner && <p class="doc-owner">{doc.data.owner}</p>}
+              {doc.data.date && <p class="doc-date">{doc.data.date}</p>}
+              {doc.data.tags && (
+                <div class="doc-tags">
+                  {doc.data.tags.map((tag) => (
+                    <span class="doc-tag">{tag}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </a>
+        ))}
+      </div>
+      </Fragment>
+    )}
+  </div>
+
+  <script>
+    function setupFilters() {
+      const wsFilter = document.getElementById('filterWorkstream') as HTMLSelectElement | null;
+      const stFilter = document.getElementById('filterStatus') as HTMLSelectElement | null;
+      const grid = document.getElementById('docsGrid');
+      if (!wsFilter || !stFilter || !grid) return;
+
+      function applyFilters() {
+        const ws = wsFilter!.value;
+        const st = stFilter!.value;
+        grid!.querySelectorAll('.doc-card-link').forEach((card) => {
+          const el = card as HTMLElement;
+          const matchWs = !ws || el.dataset.workstream === ws;
+          const matchSt = !st || el.dataset.status === st;
+          el.style.display = matchWs && matchSt ? '' : 'none';
+        });
+      }
+
+      wsFilter.addEventListener('change', applyFilters);
+      stFilter.addEventListener('change', applyFilters);
+    }
+
+    setupFilters();
+    document.addEventListener('astro:after-swap', setupFilters);
+  </script>
+</Default>
+
+<style>
+  .docs-page {
+    max-width: 900px;
+  }
+
+  .docs-header {
+    margin-bottom: 32px;
+  }
+
+  .docs-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+  }
+
+  .docs-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .docs-subtitle code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    background: rgba(6, 182, 212, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .docs-empty {
+    text-align: center;
+    padding: 48px;
+    color: var(--text-dim);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+
+  .docs-empty code {
+    color: var(--accent);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+  }
+
+  .docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .doc-card-link {
+    text-decoration: none;
+  }
+
+  .doc-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: all 0.2s ease;
+    height: 100%;
+  }
+
+  .doc-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    border-color: var(--accent);
+  }
+
+  .doc-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 10px;
+  }
+
+  .doc-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .doc-status {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .doc-workstream {
+    font-size: 0.6rem;
+    font-weight: 600;
+  }
+
+  .doc-owner {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+
+  .doc-date {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  .doc-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .doc-tag {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .docs-filters {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .filter-select {
+    font-family: var(--font);
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+
+  .filter-select:hover {
+    border-color: var(--accent);
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+</style>

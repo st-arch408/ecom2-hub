@@ -1,0 +1,29 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<BaseLayout title={title}>
+  <Header>
+    <slot name="toggles" />
+  </Header>
+  <main class="artifact-canvas">
+    <slot />
+  </main>
+</BaseLayout>
+
+<style>
+  .artifact-canvas {
+    width: 100vw;
+    min-height: calc(100vh - 56px);
+    position: relative;
+    overflow: auto;
+    padding-bottom: 80px;
+  }
+</style>

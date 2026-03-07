@@ -1,0 +1,141 @@
+---
+interface Props {
+  title?: string;
+  category?: string;
+  id?: string;
+}
+
+const { title = '', category = 'core', id = 'detail-panel' } = Astro.props;
+
+const categoryColors: Record<string, string> = {
+  core: 'var(--blue)',
+  foundation: 'var(--green)',
+  adjacent: 'var(--purple)',
+  external: 'var(--orange)',
+};
+---
+
+<div class="detail-overlay" id={id} style="display: none">
+  <div class="detail-panel" data-category={category}>
+    <div class="detail-header" style={`border-left: 3px solid ${categoryColors[category] || 'var(--accent)'}`}>
+      <h2 class="detail-title" id={`${id}-title`}>{title}</h2>
+      <button class="detail-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="detail-body" id={`${id}-body`}>
+      <slot />
+    </div>
+    <div class="detail-comparison" id={`${id}-comparison`}>
+      <slot name="comparison" />
+    </div>
+  </div>
+</div>
+
+<style>
+  .detail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .detail-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    width: 680px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    animation: slideUp 0.25s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .detail-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .detail-close:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: var(--text-bright);
+  }
+
+  .detail-body {
+    padding: 24px;
+  }
+
+  .detail-comparison {
+    padding: 0 24px 24px;
+  }
+
+  .detail-comparison:empty {
+    display: none;
+  }
+</style>
+
+<script>
+  function setupDetailPanels() {
+    document.querySelectorAll('.detail-overlay').forEach((overlay) => {
+      const closeBtn = overlay.querySelector('.detail-close');
+      closeBtn?.addEventListener('click', () => {
+        (overlay as HTMLElement).style.display = 'none';
+      });
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          (overlay as HTMLElement).style.display = 'none';
+        }
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.detail-overlay').forEach((overlay) => {
+          (overlay as HTMLElement).style.display = 'none';
+        });
+      }
+    });
+  }
+
+  setupDetailPanels();
+  document.addEventListener('astro:after-swap', setupDetailPanels);
+</script>

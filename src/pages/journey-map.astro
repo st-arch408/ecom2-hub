@@ -1,0 +1,1145 @@
+---
+import Artifact from '../layouts/Artifact.astro';
+import ToggleButton from '../components/design-system/ToggleButton.astro';
+import FlywheelFooter from '../components/design-system/FlywheelFooter.astro';
+import { journeyStages } from '../data/journey-stages';
+
+const categoryColors: Record<string, string> = {
+  core: 'var(--blue)',
+  adjacent: 'var(--purple)',
+  bookend: 'var(--text-dim)',
+};
+
+const tagColors: Record<string, string> = {
+  in: 'var(--blue)',
+  out: 'var(--green)',
+  created: 'var(--accent)',
+  triggered: 'var(--orange)',
+};
+---
+
+<Artifact title="Journey Map">
+  <!-- Header toggles -->
+  <div slot="toggles" class="jm-header-controls">
+    <div class="persona-select-wrap">
+      <select id="persona-select" class="persona-select">
+        <option value="marcus">Marcus Rivera — Tier 3 Solo</option>
+        <option value="philip">Philip Trask — Tier 2 Mid-Market</option>
+      </select>
+    </div>
+    <ToggleButton label="Screens" id="toggle-screens" />
+    <ToggleButton label="Data Flow" id="toggle-data" />
+    <ToggleButton label="Metrics" id="toggle-metrics" />
+    <ToggleButton label="SRS" id="toggle-srs" variant="srs" />
+  </div>
+
+  <!-- Stage nav pills -->
+  <div class="stage-nav">
+    {journeyStages.map((stage) => (
+      <button
+        class="stage-pill"
+        data-stage={stage.id}
+        style={`--pill-color: ${categoryColors[stage.category]}`}
+      >
+        <span class="pill-num">{stage.number}</span>
+        <span class="pill-label">{stage.shortName}</span>
+      </button>
+    ))}
+  </div>
+
+  <!-- Horizontal scroll container -->
+  <div class="jm-scroll" id="jm-scroll">
+    {journeyStages.map((stage) => (
+      <section class="stage-column" data-stage-id={stage.id} id={`stage-${stage.id}`}>
+        <!-- Stage header -->
+        <div class="stage-header" style={`border-color: ${categoryColors[stage.category]}`}>
+          <div class="stage-number" style={`background: ${categoryColors[stage.category]}`}>
+            {stage.number}
+          </div>
+          <div class="stage-title-block">
+            <h3 class="stage-name">{stage.name}</h3>
+            <span class="stage-pm">{stage.pmOwner}</span>
+          </div>
+          <span class="stage-emotion" data-marcus-emoji={stage.experience.marcus.emotionalEmoji} data-marcus-state={stage.experience.marcus.emotionalState} data-philip-emoji={stage.experience.philip.emotionalEmoji} data-philip-state={stage.experience.philip.emotionalState}>
+            <span class="emotion-emoji">{stage.experience.marcus.emotionalEmoji}</span>
+            <span class="emotion-label">{stage.experience.marcus.emotionalState}</span>
+          </span>
+        </div>
+
+        <!-- Narrative -->
+        <div class="stage-body">
+          <div class="narrative-block">
+            <p class="narrative marcus-narrative" set:html={stage.experience.marcus.narrative} />
+            <p class="narrative philip-narrative" style="display:none" set:html={stage.experience.philip.narrative} />
+          </div>
+
+          <!-- Screens layer -->
+          {stage.screens.length > 0 && (
+            <div class="layer layer-screens" style="display:none">
+              <h4 class="layer-title">Screens</h4>
+              <div class="screen-chips">
+                {stage.screens.map((scr) => (
+                  <span class="screen-chip" data-flow={scr.flow}>{scr.label}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Data flow layer -->
+          {stage.dataFlow.length > 0 && (
+            <div class="layer layer-data" style="display:none">
+              <h4 class="layer-title">Data Flow</h4>
+              <ul class="data-list">
+                {stage.dataFlow.map((d) => (
+                  <li class="data-row">
+                    <span class="data-tag" style={`background: ${tagColors[d.tag]}22; color: ${tagColors[d.tag]}`}>{d.tag}</span>
+                    <span class="data-text">{d.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <!-- Metrics layer -->
+          {stage.metrics.length > 0 && (
+            <div class="layer layer-metrics" style="display:none">
+              <h4 class="layer-title">Metrics</h4>
+              <div class="metrics-grid">
+                {stage.metrics.map((m) => (
+                  <div class="metric-item">
+                    <span class="metric-name">{m.name}</span>
+                    {m.target && <span class="metric-target">{m.target}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- SRS layer -->
+          <div class="layer layer-srs" style="display:none">
+            <h4 class="layer-title srs-title">SRS Comparison</h4>
+            <div class="srs-verdict" data-overall={stage.srs.overall}>
+              {stage.srs.verdictText}
+            </div>
+          </div>
+
+          <!-- CSoW bar -->
+          <div class="csow-bar">
+            <div class="csow-fill" style={`width: ${stage.csowPct}%`}></div>
+            <span class="csow-label">{stage.csowPct}% CSoW</span>
+          </div>
+
+          <!-- Expand button -->
+          <button class="expand-btn" data-stage-id={stage.id}>View Full Detail</button>
+        </div>
+      </section>
+    ))}
+  </div>
+
+  <!-- CSoW Footer -->
+  <FlywheelFooter />
+
+  <!-- Detail Panel Overlay -->
+  <div class="detail-overlay" id="detail-overlay">
+    <div class="detail-panel">
+      <div class="detail-header">
+        <button class="detail-nav-btn" id="detail-prev" title="Previous stage">&larr;</button>
+        <div class="detail-title-block">
+          <span class="detail-stage-num" id="detail-num"></span>
+          <h2 class="detail-stage-name" id="detail-name"></h2>
+          <span class="detail-pm" id="detail-pm"></span>
+        </div>
+        <button class="detail-nav-btn" id="detail-next" title="Next stage">&rarr;</button>
+        <button class="detail-close" id="detail-close">&times;</button>
+      </div>
+      <div class="detail-body" id="detail-body"></div>
+    </div>
+  </div>
+</Artifact>
+
+<style>
+  /* ── Header Controls ── */
+  .jm-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .persona-select-wrap {
+    margin-right: 8px;
+  }
+
+  .persona-select {
+    font-family: var(--font);
+    font-size: 0.75rem;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 28px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  .persona-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* ── Stage Nav Pills ── */
+  .stage-nav {
+    display: flex;
+    gap: 4px;
+    padding: 12px 24px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    position: sticky;
+    top: 56px;
+    z-index: 80;
+  }
+
+  .stage-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    font-family: var(--font);
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .stage-pill:hover {
+    border-color: var(--pill-color, var(--accent));
+    color: var(--text);
+  }
+
+  .stage-pill.active {
+    background: var(--pill-color, var(--accent));
+    color: #000;
+    border-color: var(--pill-color, var(--accent));
+    font-weight: 700;
+  }
+
+  .pill-num {
+    font-weight: 700;
+    font-size: 0.65rem;
+  }
+
+  .pill-label {
+    font-size: 0.7rem;
+  }
+
+  /* ── Scroll Container ── */
+  .jm-scroll {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding: 24px;
+    gap: 16px;
+    min-height: calc(100vh - 160px);
+    padding-bottom: 100px;
+  }
+
+  .jm-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .jm-scroll::-webkit-scrollbar-track {
+    background: var(--bg-panel);
+  }
+
+  .jm-scroll::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
+
+  /* ── Stage Column ── */
+  .stage-column {
+    flex: 0 0 340px;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .stage-header {
+    padding: 16px;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .stage-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #000;
+    flex-shrink: 0;
+  }
+
+  .stage-title-block {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .stage-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .stage-pm {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+  }
+
+  .stage-emotion {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .emotion-emoji {
+    font-size: 0.85rem;
+  }
+
+  /* ── Stage Body ── */
+  .stage-body {
+    padding: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+  }
+
+  .narrative-block {
+    flex: 0 0 auto;
+  }
+
+  .narrative {
+    font-size: 0.78rem;
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  :global(.narrative .hl) {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  :global(.narrative strong) {
+    color: var(--text-bright);
+    font-weight: 600;
+  }
+
+  :global(.narrative em) {
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  /* ── Layers ── */
+  .layer {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .layer-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .srs-title {
+    color: var(--red);
+  }
+
+  /* Screens */
+  .screen-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .screen-chip {
+    font-size: 0.6rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: rgba(6, 182, 212, 0.08);
+    color: var(--text);
+    border: 1px solid rgba(6, 182, 212, 0.15);
+  }
+
+  .screen-chip[data-flow="contractor"] {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.15);
+  }
+
+  .screen-chip[data-flow="homeowner"] {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.15);
+  }
+
+  .screen-chip[data-flow="post-acceptance"] {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.15);
+  }
+
+  /* Data flow */
+  .data-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .data-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .data-tag {
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .data-text {
+    font-size: 0.7rem;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  /* Metrics */
+  .metrics-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    background: rgba(6, 182, 212, 0.04);
+    border-radius: 4px;
+  }
+
+  .metric-name {
+    font-size: 0.7rem;
+    color: var(--text);
+  }
+
+  .metric-target {
+    font-size: 0.65rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* SRS */
+  .srs-verdict {
+    font-size: 0.72rem;
+    color: var(--text);
+    line-height: 1.5;
+    padding: 8px;
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.1);
+  }
+
+  .srs-verdict[data-overall="qxo-leads"] {
+    background: rgba(6, 182, 212, 0.05);
+    border-color: rgba(6, 182, 212, 0.1);
+  }
+
+  .srs-verdict[data-overall="parity"] {
+    background: rgba(234, 179, 8, 0.05);
+    border-color: rgba(234, 179, 8, 0.1);
+  }
+
+  /* CSoW Bar */
+  .csow-bar {
+    position: relative;
+    height: 20px;
+    background: rgba(6, 182, 212, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: auto;
+  }
+
+  .csow-fill {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(6, 182, 212, 0.3), rgba(6, 182, 212, 0.5));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+
+  .csow-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* Expand Button */
+  .expand-btn {
+    font-family: var(--font);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+
+  .expand-btn:hover {
+    background: rgba(6, 182, 212, 0.08);
+    border-color: var(--accent);
+  }
+
+  /* ── Detail Overlay ── */
+  .detail-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .detail-overlay.open {
+    display: flex;
+  }
+
+  .detail-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 720px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-title-block {
+    flex: 1;
+    text-align: center;
+  }
+
+  .detail-stage-num {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .detail-stage-name {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-bright);
+    margin: 4px 0 2px;
+  }
+
+  .detail-pm {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  .detail-nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .detail-nav-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .detail-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .detail-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+
+  .detail-close:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .detail-body {
+    padding: 24px;
+    overflow-y: auto;
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  :global(.detail-body .detail-section) {
+    margin-bottom: 20px;
+  }
+
+  :global(.detail-body .detail-section-title) {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  :global(.detail-body .detail-narrative) {
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  :global(.detail-body .detail-narrative strong) {
+    color: var(--text-bright);
+  }
+
+  :global(.detail-body .detail-narrative em) {
+    color: var(--text-dim);
+  }
+
+  :global(.detail-body .detail-narrative .hl) {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  :global(.detail-body .detail-chip-grid) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  :global(.detail-body .detail-chip) {
+    font-size: 0.65rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(6, 182, 212, 0.08);
+    color: var(--text);
+    border: 1px solid rgba(6, 182, 212, 0.15);
+  }
+
+  :global(.detail-body .detail-data-row) {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  :global(.detail-body .detail-data-tag) {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  :global(.detail-body .detail-metric-row) {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: rgba(6, 182, 212, 0.04);
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+
+  :global(.detail-body .detail-metric-name) {
+    font-size: 0.78rem;
+    color: var(--text);
+  }
+
+  :global(.detail-body .detail-metric-target) {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  :global(.detail-body .detail-comparison) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  :global(.detail-body .detail-comp-side) {
+    padding: 14px;
+  }
+
+  :global(.detail-body .detail-comp-side.qxo) {
+    border-right: 1px solid var(--border);
+  }
+
+  :global(.detail-body .detail-comp-label) {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  :global(.detail-body .detail-comp-dot) {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  :global(.detail-body .detail-comp-text) {
+    font-size: 0.78rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  :global(.detail-body .detail-verdict) {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  :global(.detail-body .detail-verdict.qxo-leads) {
+    background: rgba(6, 182, 212, 0.08);
+    color: var(--accent);
+  }
+
+  :global(.detail-body .detail-verdict.srs-leads) {
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--red);
+  }
+
+  :global(.detail-body .detail-verdict.parity) {
+    background: rgba(234, 179, 8, 0.08);
+    color: var(--yellow);
+  }
+
+  :global(.detail-body .detail-csow-bar) {
+    position: relative;
+    height: 24px;
+    background: rgba(6, 182, 212, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  :global(.detail-body .detail-csow-fill) {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(6, 182, 212, 0.3), rgba(6, 182, 212, 0.5));
+    border-radius: 12px;
+  }
+
+  :global(.detail-body .detail-csow-label) {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  :global(.detail-body .detail-csow-text) {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1440px) {
+    .stage-column {
+      flex: 0 0 310px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .stage-column {
+      flex: 0 0 280px;
+    }
+
+    .jm-header-controls {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .stage-nav {
+      padding: 8px 12px;
+    }
+
+    .jm-scroll {
+      padding: 12px;
+      gap: 10px;
+    }
+
+    .stage-column {
+      flex: 0 0 260px;
+    }
+
+    .detail-overlay {
+      padding: 16px;
+    }
+
+    .detail-panel {
+      max-height: 90vh;
+    }
+
+    :global(.detail-body .detail-comparison) {
+      grid-template-columns: 1fr;
+    }
+
+    :global(.detail-body .detail-comp-side.qxo) {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+</style>
+
+<script define:vars={{ stages: journeyStages, tagColors, categoryColors }}>
+  // ── State ──
+  let currentPersona = 'marcus';
+  let currentDetailIndex = -1;
+  const layerStates = { screens: false, data: false, metrics: false, srs: false };
+
+  // ── Persona toggle ──
+  const personaSelect = document.getElementById('persona-select');
+  personaSelect?.addEventListener('change', (e) => {
+    currentPersona = e.target.value;
+    updatePersona();
+  });
+
+  function updatePersona() {
+    // Swap narratives
+    document.querySelectorAll('.marcus-narrative').forEach(el => {
+      el.style.display = currentPersona === 'marcus' ? '' : 'none';
+    });
+    document.querySelectorAll('.philip-narrative').forEach(el => {
+      el.style.display = currentPersona === 'philip' ? '' : 'none';
+    });
+    // Swap emotion tags
+    document.querySelectorAll('.stage-emotion').forEach(el => {
+      const emoji = el.getAttribute(`data-${currentPersona}-emoji`);
+      const state = el.getAttribute(`data-${currentPersona}-state`);
+      const emojiEl = el.querySelector('.emotion-emoji');
+      const labelEl = el.querySelector('.emotion-label');
+      if (emojiEl) emojiEl.textContent = emoji;
+      if (labelEl) labelEl.textContent = state;
+    });
+    // Refresh detail if open
+    if (currentDetailIndex >= 0) {
+      renderDetail(currentDetailIndex);
+    }
+  }
+
+  // ── Layer toggles ──
+  function setupToggle(btnId, layerClass, stateKey) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.addEventListener('toggle', (e) => {
+      layerStates[stateKey] = e.detail.active;
+      document.querySelectorAll(`.${layerClass}`).forEach(el => {
+        el.style.display = e.detail.active ? '' : 'none';
+      });
+    });
+  }
+
+  setupToggle('toggle-screens', 'layer-screens', 'screens');
+  setupToggle('toggle-data', 'layer-data', 'data');
+  setupToggle('toggle-metrics', 'layer-metrics', 'metrics');
+  setupToggle('toggle-srs', 'layer-srs', 'srs');
+
+  // ── Stage nav pills + IntersectionObserver ──
+  const scrollContainer = document.getElementById('jm-scroll');
+  const pills = document.querySelectorAll('.stage-pill');
+
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const stageId = pill.getAttribute('data-stage');
+      const target = document.getElementById(`stage-${stageId}`);
+      if (target && scrollContainer) {
+        scrollContainer.scrollTo({ left: target.offsetLeft - 24, behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Intersection observer for active pill
+  if (scrollContainer) {
+    const stageColumns = scrollContainer.querySelectorAll('.stage-column');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const stageId = entry.target.getAttribute('data-stage-id');
+          pills.forEach(p => p.classList.remove('active'));
+          const activePill = document.querySelector(`.stage-pill[data-stage="${stageId}"]`);
+          if (activePill) activePill.classList.add('active');
+        }
+      });
+    }, { root: scrollContainer, threshold: 0.6 });
+
+    stageColumns.forEach(col => observer.observe(col));
+  }
+
+  // ── Detail Panel ──
+  const overlay = document.getElementById('detail-overlay');
+  const detailBody = document.getElementById('detail-body');
+  const detailNum = document.getElementById('detail-num');
+  const detailName = document.getElementById('detail-name');
+  const detailPm = document.getElementById('detail-pm');
+  const prevBtn = document.getElementById('detail-prev');
+  const nextBtn = document.getElementById('detail-next');
+  const closeBtn = document.getElementById('detail-close');
+
+  // Expand buttons
+  document.querySelectorAll('.expand-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const stageId = btn.getAttribute('data-stage-id');
+      const idx = stages.findIndex(s => s.id === stageId);
+      if (idx >= 0) openDetail(idx);
+    });
+  });
+
+  function openDetail(idx) {
+    currentDetailIndex = idx;
+    renderDetail(idx);
+    overlay?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDetail() {
+    currentDetailIndex = -1;
+    overlay?.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  closeBtn?.addEventListener('click', closeDetail);
+  overlay?.addEventListener('click', (e) => {
+    if (e.target === overlay) closeDetail();
+  });
+
+  prevBtn?.addEventListener('click', () => {
+    if (currentDetailIndex > 0) {
+      currentDetailIndex--;
+      renderDetail(currentDetailIndex);
+    }
+  });
+
+  nextBtn?.addEventListener('click', () => {
+    if (currentDetailIndex < stages.length - 1) {
+      currentDetailIndex++;
+      renderDetail(currentDetailIndex);
+    }
+  });
+
+  // Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDetail();
+    if (overlay?.classList.contains('open')) {
+      if (e.key === 'ArrowLeft' && currentDetailIndex > 0) {
+        currentDetailIndex--;
+        renderDetail(currentDetailIndex);
+      }
+      if (e.key === 'ArrowRight' && currentDetailIndex < stages.length - 1) {
+        currentDetailIndex++;
+        renderDetail(currentDetailIndex);
+      }
+    }
+  });
+
+  function renderDetail(idx) {
+    const stage = stages[idx];
+    if (!stage || !detailBody || !detailNum || !detailName || !detailPm) return;
+
+    detailNum.textContent = `Stage ${stage.number}`;
+    detailNum.style.color = categoryColors[stage.category] || 'var(--accent)';
+    detailName.textContent = stage.name;
+    detailPm.textContent = stage.pmOwner;
+
+    if (prevBtn) prevBtn.disabled = idx === 0;
+    if (nextBtn) nextBtn.disabled = idx === stages.length - 1;
+
+    const persona = stage.experience[currentPersona];
+    const tagColorMap = { in: '#3b82f6', out: '#22c55e', created: '#06b6d4', triggered: '#f97316' };
+
+    let html = '';
+
+    // Emotion
+    html += `<div class="detail-section">
+      <span style="font-size:1.2rem">${persona.emotionalEmoji}</span>
+      <span style="font-size:0.78rem;color:var(--text-dim);margin-left:6px">${persona.emotionalState}</span>
+    </div>`;
+
+    // Full narrative
+    html += `<div class="detail-section">
+      <div class="detail-section-title">Experience</div>
+      <div class="detail-narrative">${persona.fullNarrative}</div>
+    </div>`;
+
+    // Screens
+    if (stage.screens.length > 0) {
+      html += `<div class="detail-section">
+        <div class="detail-section-title">Screen References</div>
+        <div class="detail-chip-grid">
+          ${stage.screens.map(s => `<span class="detail-chip">${s.label}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    // Data flow
+    if (stage.dataFlow.length > 0) {
+      html += `<div class="detail-section">
+        <div class="detail-section-title">Data Flow</div>
+        ${stage.dataFlow.map(d => {
+          const c = tagColorMap[d.tag] || '#06b6d4';
+          return `<div class="detail-data-row">
+            <span class="detail-data-tag" style="background:${c}22;color:${c}">${d.tag}</span>
+            <span style="font-size:0.78rem;color:var(--text);line-height:1.5">${d.text}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    // Metrics
+    if (stage.metrics.length > 0) {
+      html += `<div class="detail-section">
+        <div class="detail-section-title">Metrics</div>
+        ${stage.metrics.map(m =>
+          `<div class="detail-metric-row">
+            <span class="detail-metric-name">${m.name}</span>
+            ${m.target ? `<span class="detail-metric-target">${m.target}</span>` : ''}
+          </div>`
+        ).join('')}
+      </div>`;
+    }
+
+    // SRS Comparison
+    html += `<div class="detail-section">
+      <div class="detail-section-title" style="color:var(--red)">SRS Comparison</div>
+      <div class="detail-comparison">
+        <div class="detail-comp-side qxo">
+          <div class="detail-comp-label" style="color:var(--accent)">
+            <span class="detail-comp-dot" style="background:var(--accent)"></span> QXO
+          </div>
+          <div class="detail-comp-text">${stage.srs.qxoAdvantage}</div>
+        </div>
+        <div class="detail-comp-side">
+          <div class="detail-comp-label" style="color:var(--red)">
+            <span class="detail-comp-dot" style="background:var(--red)"></span> SRS RoofHub
+          </div>
+          <div class="detail-comp-text">${stage.srs.approach}</div>
+        </div>
+      </div>
+      <div class="detail-verdict ${stage.srs.overall}">${stage.srs.verdictText}</div>
+    </div>`;
+
+    // CSoW
+    html += `<div class="detail-section">
+      <div class="detail-section-title">Customer Share of Wallet</div>
+      <div class="detail-csow-bar">
+        <div class="detail-csow-fill" style="width:${stage.csowPct}%"></div>
+        <span class="detail-csow-label">${stage.csowPct}% CSoW</span>
+      </div>
+      <div class="detail-csow-text">${stage.csowText}</div>
+    </div>`;
+
+    detailBody.innerHTML = html;
+  }
+</script>

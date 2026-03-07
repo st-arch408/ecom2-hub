@@ -1,0 +1,207 @@
+---
+import Default from '../layouts/Default.astro';
+import MetricBadge from '../components/design-system/MetricBadge.astro';
+import { Network, Route, FileText } from '@lucide/astro';
+
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+
+const artifacts = [
+  {
+    name: 'Ecosystem Map',
+    role: 'Interactive hub-and-spoke diagram of all QXO Ecom 2.0 workstreams, integrations, and competitive positioning',
+    href: `${base}ecosystem-map`,
+    metric: '16 Nodes',
+    icon: 'network',
+  },
+  {
+    name: 'Journey Map',
+    role: '9-stage contractor lifecycle from lead generation through job close and retention',
+    href: `${base}journey-map`,
+    metric: '9 Stages',
+    icon: 'route',
+  },
+  {
+    name: 'PR/FAQ Documents',
+    role: 'Working Backwards documents rendered with QXO Dark Intelligence styling',
+    href: `${base}docs`,
+    metric: 'Markdown → HTML',
+    icon: 'file-text',
+  },
+];
+---
+
+<Default title="Hub">
+  <div class="hub-page">
+    <div class="hub-hero">
+      <h1 class="hub-title">
+        <span class="brand">QXO</span> Ecom 2.0 Hub
+      </h1>
+      <p class="hub-subtitle">
+        Strategic artifacts, journey maps, and working documents for the QXO Ecom 2.0 initiative.
+      </p>
+    </div>
+
+    <section class="hub-section">
+      <h2 class="section-title">Artifacts</h2>
+      <div class="artifact-grid">
+        {artifacts.map((item) => (
+          <a href={item.href} class="artifact-link">
+            <div class="artifact-card">
+              <div class="artifact-icon">
+                {item.icon === 'network' && <Network size={28} />}
+                {item.icon === 'route' && <Route size={28} />}
+                {item.icon === 'file-text' && <FileText size={28} />}
+              </div>
+              <h3 class="artifact-name">{item.name}</h3>
+              <p class="artifact-desc">{item.role}</p>
+              <div class="artifact-meta">
+                <MetricBadge text={item.metric} />
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="hub-section">
+      <h2 class="section-title">Quick Links</h2>
+      <div class="links-grid">
+        <div class="link-card">
+          <span class="link-label">North Star Metric</span>
+          <span class="link-value">Customer Share of Wallet (CSoW)</span>
+        </div>
+        <div class="link-card">
+          <span class="link-label">Primary Persona</span>
+          <span class="link-value">Marcus Rivera — Tier 3 Solo Operator</span>
+        </div>
+        <div class="link-card">
+          <span class="link-label">ATB Blue ROI</span>
+          <span class="link-value">$25.58 CAC → $990 margin (39x)</span>
+        </div>
+        <div class="link-card">
+          <span class="link-label">Design System</span>
+          <span class="link-value">QXO Dark Intelligence</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</Default>
+
+<style>
+  .hub-page {
+    max-width: 900px;
+  }
+
+  .hub-hero {
+    margin-bottom: 48px;
+  }
+
+  .hub-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+  }
+
+  .brand {
+    color: var(--accent);
+  }
+
+  .hub-subtitle {
+    font-size: 1rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .hub-section {
+    margin-bottom: 48px;
+  }
+
+  .section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .artifact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .artifact-link {
+    text-decoration: none;
+  }
+
+  .artifact-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: all 0.2s ease;
+    height: 100%;
+  }
+
+  .artifact-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    border-color: var(--accent);
+  }
+
+  .artifact-icon {
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+
+  .artifact-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+  }
+
+  .artifact-desc {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .artifact-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .link-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .link-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .link-value {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.4;
+  }
+</style>

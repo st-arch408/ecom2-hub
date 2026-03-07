@@ -1,0 +1,100 @@
+---
+interface Props {
+  qxoContent: string;
+  srsContent: string;
+  advantage: 'qxo-leads' | 'parity' | 'srs-leads';
+}
+
+const { qxoContent, srsContent, advantage } = Astro.props;
+
+const advantageLabels: Record<string, { label: string; color: string }> = {
+  'qxo-leads': { label: 'QXO Advantage', color: 'var(--accent)' },
+  parity: { label: 'Parity', color: 'var(--yellow)' },
+  'srs-leads': { label: 'SRS Advantage', color: 'var(--red)' },
+};
+
+const adv = advantageLabels[advantage];
+---
+
+<div class="comparison-card">
+  <div class="comparison-header">
+    <span class="comparison-label" style={`color: ${adv.color}`}>{adv.label}</span>
+  </div>
+  <div class="comparison-grid">
+    <div class="comparison-side qxo-side">
+      <div class="side-header">
+        <span class="side-dot" style="background: var(--accent)"></span>
+        <span class="side-label">QXO</span>
+      </div>
+      <div class="side-content" set:html={qxoContent} />
+    </div>
+    <div class="comparison-side srs-side">
+      <div class="side-header">
+        <span class="side-dot" style="background: var(--red)"></span>
+        <span class="side-label">SRS RoofHub</span>
+      </div>
+      <div class="side-content" set:html={srsContent} />
+    </div>
+  </div>
+</div>
+
+<style>
+  .comparison-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .comparison-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comparison-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .comparison-side {
+    padding: 16px;
+  }
+
+  .qxo-side {
+    border-right: 1px solid var(--border);
+  }
+
+  .side-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .side-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .side-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .side-content {
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+</style>

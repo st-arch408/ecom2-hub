@@ -1,0 +1,935 @@
+---
+import Artifact from '../layouts/Artifact.astro';
+import Card from '../components/design-system/Card.astro';
+import ToggleButton from '../components/design-system/ToggleButton.astro';
+import FlywheelFooter from '../components/design-system/FlywheelFooter.astro';
+import { ecosystemNodes, connections, dataFlowGroups } from '../data/ecosystem-nodes';
+---
+
+<Artifact title="Ecosystem Map">
+  <Fragment slot="toggles">
+    <ToggleButton label="SRS Comparison" id="srsToggle" variant="srs" />
+    <ToggleButton label="Data Flow" id="dataFlowToggle" />
+  </Fragment>
+
+  <div class="canvas-wrapper">
+    <div class="canvas" id="canvas">
+
+      <!-- SVG Connections Layer (drawn dynamically by JS) -->
+      <svg class="connections-svg" id="connectionsSvg" viewBox="0 0 1400 1300">
+        <defs>
+          <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="var(--border)" />
+          </marker>
+          <marker id="arrowhead-hl" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="var(--accent)" />
+          </marker>
+        </defs>
+      </svg>
+
+      <!-- Node Cards -->
+      {ecosystemNodes.map((node) => (
+        <div
+          class="node-wrapper"
+          style={`left:${node.position.x}px;top:${node.position.y}px`}
+          data-node-wrapper={node.id}
+        >
+          <Card
+            name={node.name}
+            role={node.role}
+            metric={node.metric}
+            category={node.category}
+            status={node.status}
+            srsAdvantage={node.srsAdvantage}
+            isCenter={node.isCenter}
+            nodeId={node.id}
+          />
+        </div>
+      ))}
+
+    </div>
+  </div>
+
+  <!-- Data Flow Slide-Out Panel -->
+  <div class="dataflow-panel" id="dataFlowPanel">
+    <div class="dataflow-header">
+      <div>
+        <div class="dataflow-title">Data Flow Map</div>
+        <div class="dataflow-subtitle">What moves between each system — click a row to highlight the connection</div>
+      </div>
+      <button class="dataflow-close" id="dataFlowClose">&times;</button>
+    </div>
+    <div class="dataflow-legend">
+      <span class="dataflow-legend-item"><span style="color:var(--accent)">&#10132;</span> Outbound</span>
+      <span class="dataflow-legend-item"><span style="color:var(--green)">&#10132;</span> Inbound</span>
+    </div>
+    <div class="dataflow-body">
+      {dataFlowGroups.map((group) => (
+        <div class="dataflow-group">
+          <div class="dataflow-group-title">{group.title}</div>
+          {group.rows.map((row) => (
+            <div class="dataflow-row" data-hl-from={row.from} data-hl-to={row.to}>
+              <div class:list={['dataflow-arrow', row.direction]}>&#10132;</div>
+              <div>
+                <div class="dataflow-target">{row.target}</div>
+                <div class="dataflow-desc">{row.description}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Detail Panel Overlay -->
+  <div class="detail-overlay" id="detailOverlay">
+    <div class="detail-panel" id="detailPanel">
+      <button class="detail-close" id="detailClose">&times;</button>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="eco-legend">
+    <div class="legend-title">Legend</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Core Ecom 2.0</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Builds Foundation (3 Layers)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Adjacent Systems</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>External / Data</div>
+    <div class="legend-status">
+      <div class="legend-status-dot" style="background:var(--green)"></div><span>Active</span>
+      <div class="legend-status-dot" style="background:var(--yellow);margin-left:8px"></div><span>Planned</span>
+      <div class="legend-status-dot" style="background:var(--orange);margin-left:8px"></div><span>Dependency</span>
+    </div>
+  </div>
+
+  <!-- Flywheel Footer -->
+  <FlywheelFooter />
+</Artifact>
+
+<style>
+  /* ===== Canvas ===== */
+  .canvas-wrapper {
+    width: 100%;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+  }
+
+  .canvas {
+    position: relative;
+    width: 1400px;
+    height: 1300px;
+    min-width: 1400px;
+  }
+
+  @media (max-width: 1440px) {
+    .canvas {
+      transform: scale(0.85);
+      transform-origin: top center;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .canvas {
+      transform: scale(0.65);
+      transform-origin: top left;
+    }
+  }
+
+  /* ===== SVG Connections ===== */
+  .connections-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  :global(.conn-line) {
+    stroke: var(--border);
+    stroke-width: 1.5;
+    fill: none;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+  }
+
+  :global(.conn-line.highlighted) {
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.4));
+  }
+
+  /* ===== Node Positioning ===== */
+  .node-wrapper {
+    position: absolute;
+    z-index: 2;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .node-wrapper:active {
+    cursor: grabbing;
+  }
+
+  /* ===== Data Flow Panel ===== */
+  .dataflow-panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 380px;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    z-index: 90;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -5px 0 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .dataflow-panel:global(.visible) {
+    transform: translateX(0);
+  }
+
+  .dataflow-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .dataflow-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+
+  .dataflow-subtitle {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  .dataflow-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .dataflow-close:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: var(--text-bright);
+  }
+
+  .dataflow-legend {
+    display: flex;
+    gap: 16px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .dataflow-legend-item {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .dataflow-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 12px 20px;
+  }
+
+  .dataflow-group {
+    margin-bottom: 16px;
+  }
+
+  .dataflow-group-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dataflow-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .dataflow-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .dataflow-arrow {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .dataflow-arrow.outbound {
+    color: var(--accent);
+  }
+
+  .dataflow-arrow.inbound {
+    color: var(--green);
+  }
+
+  .dataflow-target {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 2px;
+  }
+
+  .dataflow-desc {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    line-height: 1.35;
+  }
+
+  /* ===== Detail Panel Overlay ===== */
+  .detail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .detail-overlay:global(.visible) {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .detail-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    width: 680px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    animation: slideUp 0.25s ease;
+    position: relative;
+    padding: 24px;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .detail-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 5;
+  }
+
+  .detail-close:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: var(--text-bright);
+  }
+
+  /* Detail Panel Inner Styles (set via JS innerHTML) */
+  :global(.detail-title) {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+
+  :global(.detail-subtitle) {
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+
+  :global(.detail-section) {
+    margin-bottom: 20px;
+  }
+
+  :global(.detail-section h3) {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  :global(.detail-section p) {
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  :global(.detail-metric-grid) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  :global(.detail-metric-card) {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  :global(.detail-metric-card .label) {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  :global(.detail-metric-card .value) {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  :global(.detail-metric-card .target) {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+  }
+
+  :global(.detail-screens) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  :global(.detail-screen-tag) {
+    font-size: 0.6rem;
+    padding: 3px 8px;
+    background: rgba(6, 182, 212, 0.1);
+    color: var(--accent);
+    border-radius: 4px;
+    font-family: var(--font);
+  }
+
+  :global(.detail-comp-row) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  :global(.detail-comp-card) {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.75rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  :global(.detail-comp-card.qxo) {
+    border-left: 3px solid var(--accent);
+  }
+
+  :global(.detail-comp-card.srs) {
+    border-left: 3px solid var(--red);
+  }
+
+  :global(.comp-label) {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  :global(.detail-comp-card.qxo .comp-label) {
+    color: var(--accent);
+  }
+
+  :global(.detail-comp-card.srs .comp-label) {
+    color: var(--red);
+  }
+
+  /* ===== Legend ===== */
+  .eco-legend {
+    position: fixed;
+    bottom: 80px;
+    left: 24px;
+    z-index: 80;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .legend-title {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-status {
+    display: flex;
+    align-items: center;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+    font-size: 0.6rem;
+    color: var(--text-dim);
+  }
+
+  .legend-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 4px;
+  }
+
+  @media (max-width: 1024px) {
+    .eco-legend {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { ecosystemNodes, connections, type EcosystemNode } from '../data/ecosystem-nodes';
+
+  // ========== STATE ==========
+  let srsVisible = false;
+  let dataFlowVisible = false;
+  let selectedNodeId: string | null = null;
+  let isDragging = false;
+  let dragTarget: HTMLElement | null = null;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+  let dragMoved = false;
+
+  // ========== NODE DETAILS MAP ==========
+  const nodeMap = new Map<string, EcosystemNode>();
+  ecosystemNodes.forEach((n) => nodeMap.set(n.id, n));
+
+  // ========== DYNAMIC SVG CONNECTIONS ==========
+  function getNodeCenter(nodeId: string): { x: number; y: number } | null {
+    const wrapper = document.querySelector(`[data-node-wrapper="${nodeId}"]`) as HTMLElement | null;
+    if (!wrapper) return null;
+    const x = parseFloat(wrapper.style.left) + wrapper.offsetWidth / 2;
+    const y = parseFloat(wrapper.style.top) + wrapper.offsetHeight / 2;
+    return { x, y };
+  }
+
+  function drawConnections() {
+    const svg = document.getElementById('connectionsSvg');
+    if (!svg) return;
+
+    // Remove existing lines (keep defs)
+    svg.querySelectorAll('.conn-line').forEach((el) => el.remove());
+
+    connections.forEach((conn) => {
+      const fromCenter = getNodeCenter(conn.from);
+      const toCenter = getNodeCenter(conn.to);
+      if (!fromCenter || !toCenter) return;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', String(fromCenter.x));
+      line.setAttribute('y1', String(fromCenter.y));
+      line.setAttribute('x2', String(toCenter.x));
+      line.setAttribute('y2', String(toCenter.y));
+      line.setAttribute('marker-end', 'url(#arrowhead)');
+      line.classList.add('conn-line');
+      line.dataset.from = conn.from;
+      line.dataset.to = conn.to;
+      if (conn.dashed) {
+        line.setAttribute('stroke-dasharray', '6,4');
+      }
+      svg.appendChild(line);
+    });
+  }
+
+  // ========== DRAG FUNCTIONALITY ==========
+  function setupDrag() {
+    const canvas = document.getElementById('canvas');
+    if (!canvas) return;
+
+    document.querySelectorAll('[data-node-wrapper]').forEach((wrapper) => {
+      const el = wrapper as HTMLElement;
+      el.style.cursor = 'grab';
+
+      el.addEventListener('mousedown', (e: Event) => {
+        const me = e as MouseEvent;
+        // Don't drag on right-click
+        if (me.button !== 0) return;
+
+        isDragging = true;
+        dragMoved = false;
+        dragTarget = el;
+        el.style.cursor = 'grabbing';
+        el.style.zIndex = '10';
+
+        // Account for canvas scaling
+        const canvasRect = canvas.getBoundingClientRect();
+        const scale = canvasRect.width / canvas.offsetWidth;
+
+        const currentLeft = parseFloat(el.style.left) || 0;
+        const currentTop = parseFloat(el.style.top) || 0;
+        dragOffsetX = me.clientX / scale - currentLeft;
+        dragOffsetY = me.clientY / scale - currentTop;
+
+        me.preventDefault();
+      });
+    });
+
+    document.addEventListener('mousemove', (e: MouseEvent) => {
+      if (!isDragging || !dragTarget || !canvas) return;
+
+      const canvasRect = canvas.getBoundingClientRect();
+      const scale = canvasRect.width / canvas.offsetWidth;
+
+      const newX = e.clientX / scale - dragOffsetX;
+      const newY = e.clientY / scale - dragOffsetY;
+
+      dragTarget.style.left = `${newX}px`;
+      dragTarget.style.top = `${newY}px`;
+      dragMoved = true;
+
+      drawConnections();
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging && dragTarget) {
+        dragTarget.style.cursor = 'grab';
+        dragTarget.style.zIndex = '2';
+        isDragging = false;
+        dragTarget = null;
+      }
+    });
+  }
+
+  // ========== TOGGLE: SRS COMPARISON ==========
+  function setupSrsToggle() {
+    const srsBtn = document.getElementById('srsToggle');
+    srsBtn?.addEventListener('toggle', ((e: CustomEvent) => {
+      srsVisible = e.detail.active;
+      document.querySelectorAll('[data-srs-badge]').forEach((el) => {
+        (el as HTMLElement).style.display = srsVisible ? 'flex' : 'none';
+      });
+    }) as EventListener);
+  }
+
+  // ========== TOGGLE: DATA FLOW ==========
+  function setupDataFlowToggle() {
+    const dfBtn = document.getElementById('dataFlowToggle');
+    const dfPanel = document.getElementById('dataFlowPanel');
+    const dfClose = document.getElementById('dataFlowClose');
+
+    function openDataFlow() {
+      dataFlowVisible = true;
+      dfPanel?.classList.add('visible');
+      document.querySelectorAll('.conn-line').forEach((line) => {
+        (line as SVGLineElement).style.opacity = '0.4';
+      });
+    }
+
+    function closeDataFlow() {
+      dataFlowVisible = false;
+      dfPanel?.classList.remove('visible');
+      if (dfBtn?.classList.contains('active')) {
+        dfBtn.classList.remove('active');
+        dfBtn.setAttribute('data-active', 'false');
+      }
+      document.querySelectorAll('.conn-line').forEach((line) => {
+        (line as SVGLineElement).style.opacity = '';
+        line.classList.remove('highlighted');
+        line.setAttribute('marker-end', 'url(#arrowhead)');
+      });
+      document.querySelectorAll('.dataflow-row').forEach((r) => {
+        (r as HTMLElement).style.background = '';
+      });
+    }
+
+    dfBtn?.addEventListener('toggle', ((e: CustomEvent) => {
+      if (e.detail.active) {
+        openDataFlow();
+      } else {
+        closeDataFlow();
+      }
+    }) as EventListener);
+
+    dfClose?.addEventListener('click', closeDataFlow);
+  }
+
+  // ========== DATA FLOW ROW CLICK ==========
+  function setupDataFlowRows() {
+    document.querySelectorAll('.dataflow-row').forEach((row) => {
+      row.addEventListener('click', () => {
+        const from = (row as HTMLElement).dataset.hlFrom;
+        const to = (row as HTMLElement).dataset.hlTo;
+
+        document.querySelectorAll('.conn-line').forEach((line) => {
+          const el = line as SVGLineElement;
+          if (el.dataset.from === from && el.dataset.to === to) {
+            el.style.opacity = '1';
+            line.classList.add('highlighted');
+            line.setAttribute('marker-end', 'url(#arrowhead-hl)');
+          } else {
+            el.style.opacity = '0.2';
+            line.classList.remove('highlighted');
+            line.setAttribute('marker-end', 'url(#arrowhead)');
+          }
+        });
+
+        document.querySelectorAll('.dataflow-row').forEach((r) => {
+          (r as HTMLElement).style.background = '';
+        });
+        (row as HTMLElement).style.background = 'rgba(6,182,212,.1)';
+      });
+    });
+  }
+
+  // ========== DETAIL PANEL ==========
+  function showDetail(nodeId: string) {
+    const data = nodeMap.get(nodeId);
+    if (!data) return;
+
+    if (selectedNodeId) {
+      document.querySelector(`[data-node-wrapper="${selectedNodeId}"] .card`)?.classList.remove('selected');
+    }
+    selectedNodeId = nodeId;
+    document.querySelector(`[data-node-wrapper="${nodeId}"] .card`)?.classList.add('selected');
+
+    const detail = data.detail;
+    const html = `
+      <div class="detail-title">${detail.title}</div>
+      <div class="detail-subtitle">${detail.subtitle}</div>
+
+      <div class="detail-section">
+        <h3>Description</h3>
+        <p>${detail.description}</p>
+      </div>
+
+      <div class="detail-section">
+        <h3>Key Metrics & Targets</h3>
+        <div class="detail-metric-grid">
+          ${detail.metrics.map((m) => `
+            <div class="detail-metric-card">
+              <div class="label">${m.label}</div>
+              <div class="value">${m.value}</div>
+              <div class="target">${m.target}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      ${detail.screens.length > 0 ? `
+      <div class="detail-section">
+        <h3>Screen References</h3>
+        <div class="detail-screens">
+          ${detail.screens.map((s) => `<span class="detail-screen-tag">${s}</span>`).join('')}
+        </div>
+      </div>
+      ` : ''}
+
+      <div class="detail-section">
+        <h3>Status</h3>
+        <p>${detail.status}</p>
+      </div>
+
+      <div class="detail-section">
+        <h3>Source</h3>
+        <p style="color:var(--text-dim)">${detail.source}</p>
+      </div>
+
+      <div class="detail-section">
+        <h3>QXO vs SRS RoofHub</h3>
+        <div class="detail-comp-row">
+          <div class="detail-comp-card qxo">
+            <div class="comp-label">QXO Approach</div>
+            ${detail.comp.qxo}
+          </div>
+          <div class="detail-comp-card srs">
+            <div class="comp-label">SRS RoofHub</div>
+            ${detail.comp.srs}
+          </div>
+        </div>
+      </div>
+    `;
+
+    const content = document.getElementById('detailContent');
+    const overlay = document.getElementById('detailOverlay');
+    if (content) content.innerHTML = html;
+    overlay?.classList.add('visible');
+  }
+
+  function closeDetail() {
+    const overlay = document.getElementById('detailOverlay');
+    overlay?.classList.remove('visible');
+    if (selectedNodeId) {
+      document.querySelector(`[data-node-wrapper="${selectedNodeId}"] .card`)?.classList.remove('selected');
+      selectedNodeId = null;
+    }
+  }
+
+  function setupDetailPanel() {
+    document.getElementById('detailOverlay')?.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('detailOverlay')) {
+        closeDetail();
+      }
+    });
+    document.getElementById('detailClose')?.addEventListener('click', closeDetail);
+    document.getElementById('detailPanel')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  // ========== NODE CLICK (only if not dragged) ==========
+  function setupNodeClicks() {
+    document.querySelectorAll('[data-node-wrapper]').forEach((wrapper) => {
+      wrapper.addEventListener('click', () => {
+        if (dragMoved) return; // Ignore click after drag
+        const nodeId = (wrapper as HTMLElement).dataset.nodeWrapper;
+        if (nodeId) showDetail(nodeId);
+      });
+    });
+  }
+
+  // ========== NODE HOVER → HIGHLIGHT CONNECTIONS ==========
+  function setupNodeHover() {
+    document.querySelectorAll('[data-node-wrapper]').forEach((wrapper) => {
+      const nodeId = (wrapper as HTMLElement).dataset.nodeWrapper;
+
+      wrapper.addEventListener('mouseenter', () => {
+        if (dataFlowVisible || isDragging) return;
+        document.querySelectorAll('.conn-line').forEach((line) => {
+          const el = line as SVGLineElement;
+          if (el.dataset.from === nodeId || el.dataset.to === nodeId) {
+            line.classList.add('highlighted');
+            line.setAttribute('marker-end', 'url(#arrowhead-hl)');
+          }
+        });
+      });
+
+      wrapper.addEventListener('mouseleave', () => {
+        if (dataFlowVisible) return;
+        document.querySelectorAll('.conn-line').forEach((line) => {
+          line.classList.remove('highlighted');
+          line.setAttribute('marker-end', 'url(#arrowhead)');
+        });
+      });
+    });
+  }
+
+  // ========== ESCAPE KEY ==========
+  function setupEscapeKey() {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeDetail();
+        if (dataFlowVisible) {
+          const dfPanel = document.getElementById('dataFlowPanel');
+          const dfBtn = document.getElementById('dataFlowToggle');
+          dataFlowVisible = false;
+          dfPanel?.classList.remove('visible');
+          if (dfBtn?.classList.contains('active')) {
+            dfBtn.classList.remove('active');
+            dfBtn.setAttribute('data-active', 'false');
+          }
+          document.querySelectorAll('.conn-line').forEach((line) => {
+            (line as SVGLineElement).style.opacity = '';
+            line.classList.remove('highlighted');
+            line.setAttribute('marker-end', 'url(#arrowhead)');
+          });
+        }
+      }
+    });
+  }
+
+  // ========== INIT ==========
+  function init() {
+    setupSrsToggle();
+    setupDataFlowToggle();
+    setupDataFlowRows();
+    setupDetailPanel();
+    setupNodeClicks();
+    setupNodeHover();
+    setupEscapeKey();
+    setupDrag();
+    // Draw connections after a tick so card dimensions are rendered
+    requestAnimationFrame(() => drawConnections());
+  }
+
+  init();
+  document.addEventListener('astro:after-swap', init);
+</script>

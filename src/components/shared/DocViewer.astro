@@ -1,0 +1,108 @@
+---
+interface RelatedDoc {
+  slug: string;
+  title: string;
+  version?: string;
+  status?: string;
+}
+
+interface Props {
+  relatedDocs?: RelatedDoc[];
+}
+
+const { relatedDocs = [] } = Astro.props;
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+
+const statusColors: Record<string, string> = {
+  draft: 'var(--text-dim)',
+  review: 'var(--yellow)',
+  approved: 'var(--green)',
+  shipped: 'var(--accent)',
+};
+---
+
+{relatedDocs.length > 0 && (
+  <div class="doc-viewer">
+    <h4 class="dv-title">Related Documents</h4>
+    <ul class="dv-list">
+      {relatedDocs.map((doc) => (
+        <li>
+          <a href={`${base}docs/${doc.slug}`} class="dv-link">
+            <span class="dv-doc-title">{doc.title}</span>
+            <div class="dv-meta">
+              {doc.version && <span class="dv-badge">v{doc.version}</span>}
+              {doc.status && (
+                <span class="dv-status" style={`color: ${statusColors[doc.status] || 'var(--text-dim)'}`}>
+                  {doc.status}
+                </span>
+              )}
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
+<style>
+  .doc-viewer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .dv-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .dv-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .dv-link {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .dv-link:hover {
+    background: rgba(6, 182, 212, 0.05);
+  }
+
+  .dv-doc-title {
+    font-size: 0.75rem;
+    color: var(--text);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .dv-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .dv-badge {
+    font-size: 0.6rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: rgba(6, 182, 212, 0.1);
+    color: var(--accent);
+  }
+
+  .dv-status {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+</style>

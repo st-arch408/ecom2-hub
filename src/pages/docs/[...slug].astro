@@ -1,0 +1,207 @@
+---
+import { getCollection } from 'astro:content';
+import Default from '../../layouts/Default.astro';
+import MarkdownRenderer from '../../components/shared/MarkdownRenderer.astro';
+import DocViewer from '../../components/shared/DocViewer.astro';
+import MetricBadge from '../../components/design-system/MetricBadge.astro';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('prfaq');
+  return docs.map((doc) => ({
+    params: { slug: doc.slug },
+    props: { doc, allDocs: docs },
+  }));
+}
+
+const { doc, allDocs } = Astro.props;
+const { Content } = await doc.render();
+
+const statusColors: Record<string, string> = {
+  draft: 'var(--text-dim)',
+  review: 'var(--yellow)',
+  approved: 'var(--green)',
+  shipped: 'var(--accent)',
+};
+
+// Find related docs (same workstream or overlapping tags)
+const currentTags = doc.data.tags || [];
+const relatedDocs = allDocs
+  .filter((d) => d.slug !== doc.slug)
+  .filter((d) => {
+    const sameWorkstream = d.data.workstream && d.data.workstream === doc.data.workstream;
+    const sharedTags = (d.data.tags || []).some((t) => currentTags.includes(t));
+    return sameWorkstream || sharedTags;
+  })
+  .map((d) => ({
+    slug: d.slug,
+    title: d.data.title || d.slug,
+    version: d.data.version,
+    status: d.data.status,
+  }));
+---
+
+<Default title={doc.data.title || doc.slug}>
+  <DocViewer relatedDocs={relatedDocs} slot="sidebar" />
+  <article class="doc-page">
+    <header class="doc-header">
+      <h1 class="doc-page-title">{doc.data.title || doc.slug}</h1>
+      <div class="doc-meta">
+        {doc.data.version && <MetricBadge text={`v${doc.data.version}`} />}
+        {doc.data.status && (
+          <span class="doc-status-badge" style={`color: ${statusColors[doc.data.status]}`}>
+            {doc.data.status}
+          </span>
+        )}
+        {doc.data.workstream && <MetricBadge text={doc.data.workstream} />}
+        {doc.data.owner && <span class="doc-owner">{doc.data.owner}</span>}
+        {doc.data.date && <span class="doc-date">{doc.data.date}</span>}
+      </div>
+      {doc.data.tags && (
+        <div class="doc-tags">
+          {doc.data.tags.map((tag) => (
+            <span class="doc-tag">{tag}</span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <nav class="doc-toc" id="toc"></nav>
+
+    <MarkdownRenderer>
+      <Content />
+    </MarkdownRenderer>
+  </article>
+
+  <script>
+    function buildTOC() {
+      const toc = document.getElementById('toc');
+      const headings = document.querySelectorAll('.md-content h2, .md-content h3');
+      if (!toc || headings.length === 0) return;
+
+      const list = document.createElement('ul');
+      list.className = 'toc-list';
+
+      headings.forEach((heading, i) => {
+        const id = heading.id || `heading-${i}`;
+        heading.id = id;
+
+        const li = document.createElement('li');
+        li.className = heading.tagName === 'H3' ? 'toc-item toc-sub' : 'toc-item';
+
+        const a = document.createElement('a');
+        a.href = `#${id}`;
+        a.textContent = heading.textContent;
+        a.className = 'toc-link';
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          heading.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        li.appendChild(a);
+        list.appendChild(li);
+      });
+
+      toc.appendChild(list);
+    }
+
+    buildTOC();
+  </script>
+</Default>
+
+<style>
+  .doc-page {
+    max-width: 800px;
+  }
+
+  .doc-header {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .doc-page-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-bright);
+    margin-bottom: 12px;
+  }
+
+  .doc-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .doc-status-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .doc-owner {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+
+  .doc-date {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+
+  .doc-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .doc-tag {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .doc-toc {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .doc-toc:empty {
+    display: none;
+  }
+</style>
+
+<style is:global>
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin-bottom: 4px;
+  }
+
+  .toc-sub {
+    padding-left: 16px;
+  }
+
+  .toc-link {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .toc-link:hover {
+    color: var(--accent);
+  }
+</style>

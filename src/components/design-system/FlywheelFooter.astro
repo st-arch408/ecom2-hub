@@ -1,0 +1,104 @@
+---
+import { Wrench, TrendingUp, Lock, Package, BarChart3, Bot } from '@lucide/astro';
+
+interface FlywheelStep {
+  icon: string;
+  label: string;
+}
+
+interface Props {
+  steps?: FlywheelStep[];
+}
+
+const { steps = [
+  { icon: 'wrench', label: 'Better Tools' },
+  { icon: 'trending-up', label: 'Adoption' },
+  { icon: 'lock', label: 'Switching Costs' },
+  { icon: 'package', label: 'Incremental Orders' },
+  { icon: 'bar-chart', label: 'Data' },
+  { icon: 'bot', label: 'Better Tools' },
+] } = Astro.props;
+---
+
+<footer class="flywheel-footer">
+  <div class="flywheel-inner">
+    <span class="flywheel-title">CSoW Flywheel</span>
+    <div class="flywheel-steps">
+      {steps.map((step, i) => (
+        <>
+          <div class="flywheel-step">
+            <span class="flywheel-icon">
+              {step.icon === 'wrench' && <Wrench size={14} />}
+              {step.icon === 'trending-up' && <TrendingUp size={14} />}
+              {step.icon === 'lock' && <Lock size={14} />}
+              {step.icon === 'package' && <Package size={14} />}
+              {step.icon === 'bar-chart' && <BarChart3 size={14} />}
+              {step.icon === 'bot' && <Bot size={14} />}
+            </span>
+            <span class="flywheel-label">{step.label}</span>
+          </div>
+          {i < steps.length - 1 && <span class="flywheel-arrow">→</span>}
+        </>
+      ))}
+    </div>
+  </div>
+</footer>
+
+<style>
+  .flywheel-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    background: linear-gradient(to top, var(--bg) 60%, transparent);
+    padding: 20px 24px 14px;
+  }
+
+  .flywheel-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .flywheel-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .flywheel-steps {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .flywheel-step {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .flywheel-icon {
+    display: flex;
+    align-items: center;
+    color: var(--accent);
+  }
+
+  .flywheel-label {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .flywheel-arrow {
+    color: var(--border);
+    font-size: 0.8rem;
+  }
+</style>

@@ -1,0 +1,60 @@
+---
+interface Props {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  label?: string;
+  dashed?: boolean;
+  id?: string;
+}
+
+const { x1, y1, x2, y2, label, dashed = false, id } = Astro.props;
+
+const midX = (x1 + x2) / 2;
+const midY = (y1 + y2) / 2;
+---
+
+<g class="connection-line" data-connection-id={id}>
+  <line
+    x1={x1}
+    y1={y1}
+    x2={x2}
+    y2={y2}
+    stroke="var(--border)"
+    stroke-width="1.5"
+    stroke-dasharray={dashed ? '4,3' : 'none'}
+    marker-end="url(#arrowhead)"
+  />
+  {label && (
+    <text
+      x={midX}
+      y={midY - 8}
+      text-anchor="middle"
+      class="connection-label"
+    >
+      {label}
+    </text>
+  )}
+</g>
+
+<style>
+  .connection-line line {
+    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+  }
+
+  .connection-line.highlighted line {
+    stroke: var(--accent);
+    stroke-width: 2.5;
+  }
+
+  .connection-label {
+    font-size: 0.55rem;
+    fill: var(--text-dim);
+    pointer-events: none;
+  }
+
+  .connection-line.highlighted .connection-label {
+    fill: var(--accent);
+  }
+</style>

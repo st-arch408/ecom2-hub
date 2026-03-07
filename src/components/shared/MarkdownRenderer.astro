@@ -1,0 +1,263 @@
+---
+// Wraps rendered markdown content with QXO Dark Intelligence styling
+---
+
+<div class="md-content">
+  <slot />
+</div>
+
+<style>
+  /* Headings */
+  .md-content :global(h1) {
+    color: var(--text-bright);
+    font-size: 1.8rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 0.5rem;
+    margin-top: 2rem;
+  }
+
+  .md-content :global(h2) {
+    color: var(--accent);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-top: 2.5rem;
+    letter-spacing: 0.3px;
+  }
+
+  .md-content :global(h3) {
+    color: var(--text-bright);
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+  }
+
+  .md-content :global(h4) {
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-top: 1.2rem;
+  }
+
+  /* Body text */
+  .md-content :global(p) {
+    color: var(--text);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+
+  /* Blockquotes — PR press release sections */
+  .md-content :global(blockquote) {
+    border-left: 3px solid var(--accent);
+    background: rgba(6, 182, 212, 0.05);
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  .md-content :global(blockquote p) {
+    color: var(--text);
+    font-style: italic;
+  }
+
+  /* Tables */
+  .md-content :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.8rem;
+  }
+
+  .md-content :global(th) {
+    background: var(--bg-panel);
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.7rem;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--accent);
+    text-align: left;
+  }
+
+  .md-content :global(td) {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  .md-content :global(tr:hover td) {
+    background: rgba(6, 182, 212, 0.03);
+  }
+
+  /* Code blocks */
+  .md-content :global(pre) {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  .md-content :global(code) {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+
+  .md-content :global(pre code) {
+    color: var(--text);
+  }
+
+  /* Lists */
+  .md-content :global(ul),
+  .md-content :global(ol) {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .md-content :global(li) {
+    color: var(--text);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 0.4rem;
+  }
+
+  .md-content :global(li::marker) {
+    color: var(--accent);
+  }
+
+  /* Horizontal rules */
+  .md-content :global(hr) {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  /* Bold text */
+  .md-content :global(strong) {
+    color: var(--text-bright);
+    font-weight: 600;
+  }
+
+  /* Links */
+  .md-content :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: rgba(6, 182, 212, 0.3);
+    text-underline-offset: 2px;
+  }
+
+  .md-content :global(a:hover) {
+    text-decoration-color: var(--accent);
+  }
+
+  /* ===== PR/FAQ-Specific Formatting ===== */
+
+  /* Hot Debate / unresolved sections — orange accent */
+  .md-content :global(h2.debate-section) {
+    color: var(--orange);
+    border-left: 3px solid var(--orange);
+    padding-left: 12px;
+  }
+
+  .md-content :global(h2.debate-section ~ h3) {
+    color: var(--orange);
+  }
+
+  /* Press Release hero section — larger body text */
+  .md-content :global(h2.press-release-section) {
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+  }
+
+  .md-content :global(h2.press-release-section ~ p) {
+    font-size: 0.95rem;
+    line-height: 1.8;
+  }
+
+  /* FAQ Q&A styling — questions stand out from answers */
+  .md-content :global(h3.faq-question) {
+    color: var(--text-bright);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Table overflow wrapper */
+  .md-content :global(.table-wrapper) {
+    overflow-x: auto;
+    margin: 1.5rem 0;
+  }
+</style>
+
+<script>
+  function enhancePrFaqSections() {
+    const content = document.querySelector('.md-content');
+    if (!content) return;
+
+    const h2s = content.querySelectorAll('h2');
+    let inFaqSection = false;
+
+    h2s.forEach((h2) => {
+      const text = h2.textContent?.toLowerCase() || '';
+
+      // Detect Hot Debate / unresolved sections
+      if (text.includes('debate') || text.includes('hot')) {
+        h2.classList.add('debate-section');
+      }
+
+      // Detect Press Release sections
+      if (text.includes('press release')) {
+        h2.classList.add('press-release-section');
+      }
+
+      // Detect FAQ sections
+      if (text.includes('faq') || text.includes('frequently asked')) {
+        inFaqSection = true;
+      }
+
+      // Detect non-FAQ sections that end FAQ mode
+      if (text.includes('debate') || text.includes('stop reading') || text.includes('appendix')) {
+        inFaqSection = false;
+      }
+    });
+
+    // Style FAQ h3 questions (h3s inside FAQ sections)
+    const h3s = content.querySelectorAll('h3');
+    let currentSection = '';
+    const allHeadings = content.querySelectorAll('h2, h3');
+
+    let isFaq = false;
+    allHeadings.forEach((heading) => {
+      if (heading.tagName === 'H2') {
+        const text = heading.textContent?.toLowerCase() || '';
+        if (text.includes('faq') || text.includes('frequently asked')) {
+          isFaq = true;
+        } else if (text.includes('debate') || text.includes('hot') || text.includes('stop reading') || text.includes('appendix')) {
+          isFaq = false;
+        }
+      } else if (heading.tagName === 'H3' && isFaq) {
+        heading.classList.add('faq-question');
+      }
+    });
+
+    // Wrap tables in overflow container
+    content.querySelectorAll('table').forEach((table) => {
+      if (!table.parentElement?.classList.contains('table-wrapper')) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-wrapper';
+        table.parentNode?.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      }
+    });
+  }
+
+  enhancePrFaqSections();
+  document.addEventListener('astro:after-swap', enhancePrFaqSections);
+</script>

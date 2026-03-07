@@ -1,0 +1,58 @@
+---
+const categories = [
+  { label: 'Core / Primary', color: 'var(--blue)' },
+  { label: 'Foundation / Growth', color: 'var(--green)' },
+  { label: 'Adjacent / Supporting', color: 'var(--purple)' },
+  { label: 'External / Data', color: 'var(--orange)' },
+];
+---
+
+<div class="legend">
+  {categories.map((cat) => (
+    <div class="legend-item">
+      <span class="legend-dot" style={`background: ${cat.color}`}></span>
+      <span class="legend-label">{cat.label}</span>
+    </div>
+  ))}
+</div>
+
+<style>
+  .legend {
+    position: fixed;
+    bottom: 80px;
+    left: 24px;
+    z-index: 95;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-label {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 1024px) {
+    .legend {
+      display: none;
+    }
+  }
+</style>
