@@ -1,7 +1,6 @@
 ---
 import Artifact from '../layouts/Artifact.astro';
 import ToggleButton from '../components/design-system/ToggleButton.astro';
-import FlywheelFooter from '../components/design-system/FlywheelFooter.astro';
 import { journeyStages } from '../data/journey-stages';
 
 const categoryColors: Record<string, string> = {
@@ -15,6 +14,13 @@ const tagColors: Record<string, string> = {
   out: 'var(--green)',
   created: 'var(--accent)',
   triggered: 'var(--orange)',
+};
+
+const flowLabels: Record<string, string> = {
+  contractor: 'Contractor Flow',
+  homeowner: 'Homeowner Flow',
+  'post-acceptance': 'Post-Acceptance',
+  'core-platform': 'Core Platform',
 };
 ---
 
@@ -66,16 +72,16 @@ const tagColors: Record<string, string> = {
           </span>
         </div>
 
-        <!-- Narrative -->
+        <!-- Narrative + layers -->
         <div class="stage-body">
           <div class="narrative-block">
             <p class="narrative marcus-narrative" set:html={stage.experience.marcus.narrative} />
-            <p class="narrative philip-narrative" style="display:none" set:html={stage.experience.philip.narrative} />
+            <p class="narrative philip-narrative hidden-persona" set:html={stage.experience.philip.narrative} />
           </div>
 
           <!-- Screens layer -->
           {stage.screens.length > 0 && (
-            <div class="layer layer-screens" style="display:none">
+            <div class="layer layer-screens layer-collapsed">
               <h4 class="layer-title">Screens</h4>
               <div class="screen-chips">
                 {stage.screens.map((scr) => (
@@ -87,7 +93,7 @@ const tagColors: Record<string, string> = {
 
           <!-- Data flow layer -->
           {stage.dataFlow.length > 0 && (
-            <div class="layer layer-data" style="display:none">
+            <div class="layer layer-data layer-collapsed">
               <h4 class="layer-title">Data Flow</h4>
               <ul class="data-list">
                 {stage.dataFlow.map((d) => (
@@ -102,7 +108,7 @@ const tagColors: Record<string, string> = {
 
           <!-- Metrics layer -->
           {stage.metrics.length > 0 && (
-            <div class="layer layer-metrics" style="display:none">
+            <div class="layer layer-metrics layer-collapsed">
               <h4 class="layer-title">Metrics</h4>
               <div class="metrics-grid">
                 {stage.metrics.map((m) => (
@@ -116,7 +122,7 @@ const tagColors: Record<string, string> = {
           )}
 
           <!-- SRS layer -->
-          <div class="layer layer-srs" style="display:none">
+          <div class="layer layer-srs layer-collapsed">
             <h4 class="layer-title srs-title">SRS Comparison</h4>
             <div class="srs-verdict" data-overall={stage.srs.overall}>
               {stage.srs.verdictText}
@@ -130,27 +136,36 @@ const tagColors: Record<string, string> = {
           </div>
 
           <!-- Expand button -->
-          <button class="expand-btn" data-stage-id={stage.id}>View Full Detail</button>
+          <button class="expand-btn" data-stage-id={stage.id}>View Full Detail →</button>
         </div>
       </section>
     ))}
   </div>
 
-  <!-- CSoW Footer -->
-  <FlywheelFooter />
+  <!-- CSoW Scroll-Aware Footer -->
+  <footer class="csow-footer" id="csow-footer">
+    <div class="csow-footer-inner">
+      <span class="csow-footer-title">CSoW Flywheel</span>
+      <div class="csow-footer-progress">
+        <div class="csow-footer-fill" id="csow-footer-fill"></div>
+      </div>
+      <span class="csow-footer-pct" id="csow-footer-pct">5%</span>
+      <span class="csow-footer-text" id="csow-footer-text"></span>
+    </div>
+  </footer>
 
   <!-- Detail Panel Overlay -->
   <div class="detail-overlay" id="detail-overlay">
     <div class="detail-panel">
       <div class="detail-header">
-        <button class="detail-nav-btn" id="detail-prev" title="Previous stage">&larr;</button>
+        <button class="detail-nav-btn" id="detail-prev" title="Previous stage">←</button>
         <div class="detail-title-block">
           <span class="detail-stage-num" id="detail-num"></span>
           <h2 class="detail-stage-name" id="detail-name"></h2>
           <span class="detail-pm" id="detail-pm"></span>
         </div>
-        <button class="detail-nav-btn" id="detail-next" title="Next stage">&rarr;</button>
-        <button class="detail-close" id="detail-close">&times;</button>
+        <button class="detail-nav-btn" id="detail-next" title="Next stage">→</button>
+        <button class="detail-close" id="detail-close">×</button>
       </div>
       <div class="detail-body" id="detail-body"></div>
     </div>
@@ -268,16 +283,16 @@ const tagColors: Record<string, string> = {
     border-radius: 3px;
   }
 
-  /* ── Stage Column ── */
+  /* ── Stage Column ── FIX: wider cards, no overflow clip, min-height */
   .stage-column {
-    flex: 0 0 340px;
+    flex: 0 0 380px;
     scroll-snap-align: start;
     display: flex;
     flex-direction: column;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: hidden;
+    min-height: 420px;
   }
 
   .stage-header {
@@ -340,18 +355,28 @@ const tagColors: Record<string, string> = {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    overflow-y: auto;
   }
 
   .narrative-block {
     flex: 0 0 auto;
   }
 
+  /* FIX: Persona fade animation */
   .narrative {
     font-size: 0.78rem;
     color: var(--text);
     line-height: 1.6;
     margin: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .hidden-persona {
+    display: none;
+    opacity: 0;
+  }
+
+  .narrative.fading {
+    opacity: 0;
   }
 
   :global(.narrative .hl) {
@@ -369,10 +394,21 @@ const tagColors: Record<string, string> = {
     font-style: italic;
   }
 
-  /* ── Layers ── */
+  /* ── Layers — FIX: smooth transitions instead of display:none ── */
   .layer {
     border-top: 1px solid var(--border);
     padding-top: 10px;
+    max-height: 600px;
+    opacity: 1;
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease, margin 0.35s ease;
+  }
+
+  .layer-collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    border-top-color: transparent;
   }
 
   .layer-title {
@@ -499,7 +535,7 @@ const tagColors: Record<string, string> = {
     border-color: rgba(234, 179, 8, 0.1);
   }
 
-  /* CSoW Bar */
+  /* CSoW Bar (in-card) */
   .csow-bar {
     position: relative;
     height: 20px;
@@ -546,6 +582,68 @@ const tagColors: Record<string, string> = {
     border-color: var(--accent);
   }
 
+  /* ── CSoW Scroll-Aware Footer ── */
+  .csow-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    background: linear-gradient(to top, var(--bg) 70%, transparent);
+    padding: 20px 24px 14px;
+  }
+
+  .csow-footer-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .csow-footer-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .csow-footer-progress {
+    flex: 0 0 120px;
+    height: 6px;
+    background: rgba(6, 182, 212, 0.12);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .csow-footer-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+    width: 5%;
+  }
+
+  .csow-footer-pct {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    min-width: 32px;
+  }
+
+  .csow-footer-text {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+
   /* ── Detail Overlay ── */
   .detail-overlay {
     position: fixed;
@@ -572,7 +670,6 @@ const tagColors: Record<string, string> = {
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
   }
 
   .detail-header {
@@ -581,6 +678,7 @@ const tagColors: Record<string, string> = {
     gap: 12px;
     padding: 20px 24px;
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
 
   .detail-title-block {
@@ -663,6 +761,8 @@ const tagColors: Record<string, string> = {
     font-size: 0.82rem;
     color: var(--text);
     line-height: 1.7;
+    flex: 1;
+    min-height: 0;
   }
 
   :global(.detail-body .detail-section) {
@@ -697,6 +797,19 @@ const tagColors: Record<string, string> = {
     font-weight: 600;
   }
 
+  :global(.detail-body .detail-flow-group) {
+    margin-bottom: 10px;
+  }
+
+  :global(.detail-body .detail-flow-label) {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
   :global(.detail-body .detail-chip-grid) {
     display: flex;
     flex-wrap: wrap;
@@ -710,6 +823,21 @@ const tagColors: Record<string, string> = {
     background: rgba(6, 182, 212, 0.08);
     color: var(--text);
     border: 1px solid rgba(6, 182, 212, 0.15);
+  }
+
+  :global(.detail-body .detail-chip.flow-contractor) {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.15);
+  }
+
+  :global(.detail-body .detail-chip.flow-homeowner) {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.15);
+  }
+
+  :global(.detail-body .detail-chip.flow-post-acceptance) {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.15);
   }
 
   :global(.detail-body .detail-data-row) {
@@ -846,18 +974,22 @@ const tagColors: Record<string, string> = {
   /* ── Responsive ── */
   @media (max-width: 1440px) {
     .stage-column {
-      flex: 0 0 310px;
+      flex: 0 0 340px;
     }
   }
 
   @media (max-width: 1024px) {
     .stage-column {
-      flex: 0 0 280px;
+      flex: 0 0 300px;
     }
 
     .jm-header-controls {
       flex-wrap: wrap;
       gap: 6px;
+    }
+
+    .csow-footer-text {
+      display: none;
     }
   }
 
@@ -872,7 +1004,8 @@ const tagColors: Record<string, string> = {
     }
 
     .stage-column {
-      flex: 0 0 260px;
+      flex: 0 0 280px;
+      min-height: 360px;
     }
 
     .detail-overlay {
@@ -899,45 +1032,77 @@ const tagColors: Record<string, string> = {
   let currentPersona = 'marcus';
   let currentDetailIndex = -1;
   const layerStates = { screens: false, data: false, metrics: false, srs: false };
+  let activeStageIndex = 0;
 
-  // ── Persona toggle ──
+  const flowLabels = {
+    contractor: 'Contractor Flow',
+    homeowner: 'Homeowner Flow',
+    'post-acceptance': 'Post-Acceptance',
+    'core-platform': 'Core Platform',
+  };
+
+  // ── Persona toggle with fade ──
   const personaSelect = document.getElementById('persona-select');
   personaSelect?.addEventListener('change', (e) => {
     currentPersona = e.target.value;
-    updatePersona();
+    updatePersonaWithFade();
   });
 
-  function updatePersona() {
-    // Swap narratives
-    document.querySelectorAll('.marcus-narrative').forEach(el => {
-      el.style.display = currentPersona === 'marcus' ? '' : 'none';
-    });
-    document.querySelectorAll('.philip-narrative').forEach(el => {
-      el.style.display = currentPersona === 'philip' ? '' : 'none';
-    });
-    // Swap emotion tags
-    document.querySelectorAll('.stage-emotion').forEach(el => {
-      const emoji = el.getAttribute(`data-${currentPersona}-emoji`);
-      const state = el.getAttribute(`data-${currentPersona}-state`);
-      const emojiEl = el.querySelector('.emotion-emoji');
-      const labelEl = el.querySelector('.emotion-label');
-      if (emojiEl) emojiEl.textContent = emoji;
-      if (labelEl) labelEl.textContent = state;
-    });
-    // Refresh detail if open
-    if (currentDetailIndex >= 0) {
-      renderDetail(currentDetailIndex);
-    }
+  function updatePersonaWithFade() {
+    const allNarratives = document.querySelectorAll('.narrative');
+    // Fade out
+    allNarratives.forEach(el => el.classList.add('fading'));
+
+    setTimeout(() => {
+      // Swap visibility
+      document.querySelectorAll('.marcus-narrative').forEach(el => {
+        if (currentPersona === 'marcus') {
+          el.classList.remove('hidden-persona');
+          el.style.display = '';
+        } else {
+          el.classList.add('hidden-persona');
+          el.style.display = 'none';
+        }
+      });
+      document.querySelectorAll('.philip-narrative').forEach(el => {
+        if (currentPersona === 'philip') {
+          el.classList.remove('hidden-persona');
+          el.style.display = '';
+        } else {
+          el.classList.add('hidden-persona');
+          el.style.display = 'none';
+        }
+      });
+      // Swap emotion tags
+      document.querySelectorAll('.stage-emotion').forEach(el => {
+        const emoji = el.getAttribute(`data-${currentPersona}-emoji`);
+        const state = el.getAttribute(`data-${currentPersona}-state`);
+        const emojiEl = el.querySelector('.emotion-emoji');
+        const labelEl = el.querySelector('.emotion-label');
+        if (emojiEl) emojiEl.textContent = emoji;
+        if (labelEl) labelEl.textContent = state;
+      });
+      // Fade in
+      allNarratives.forEach(el => el.classList.remove('fading'));
+      // Refresh detail if open
+      if (currentDetailIndex >= 0) {
+        renderDetail(currentDetailIndex);
+      }
+    }, 200);
   }
 
-  // ── Layer toggles ──
+  // ── Layer toggles — FIX: CSS class toggle instead of display ──
   function setupToggle(btnId, layerClass, stateKey) {
     const btn = document.getElementById(btnId);
     if (!btn) return;
     btn.addEventListener('toggle', (e) => {
       layerStates[stateKey] = e.detail.active;
       document.querySelectorAll(`.${layerClass}`).forEach(el => {
-        el.style.display = e.detail.active ? '' : 'none';
+        if (e.detail.active) {
+          el.classList.remove('layer-collapsed');
+        } else {
+          el.classList.add('layer-collapsed');
+        }
       });
     });
   }
@@ -961,22 +1126,42 @@ const tagColors: Record<string, string> = {
     });
   });
 
-  // Intersection observer for active pill
+  // Intersection observer for active pill + CSoW footer
+  const csowFill = document.getElementById('csow-footer-fill');
+  const csowPct = document.getElementById('csow-footer-pct');
+  const csowText = document.getElementById('csow-footer-text');
+
   if (scrollContainer) {
     const stageColumns = scrollContainer.querySelectorAll('.stage-column');
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const stageId = entry.target.getAttribute('data-stage-id');
-          pills.forEach(p => p.classList.remove('active'));
-          const activePill = document.querySelector(`.stage-pill[data-stage="${stageId}"]`);
-          if (activePill) activePill.classList.add('active');
+          const idx = stages.findIndex(s => s.id === stageId);
+          if (idx >= 0) {
+            activeStageIndex = idx;
+            // Update pills
+            pills.forEach(p => p.classList.remove('active'));
+            const activePill = document.querySelector(`.stage-pill[data-stage="${stageId}"]`);
+            if (activePill) activePill.classList.add('active');
+            // Update CSoW footer
+            updateCsowFooter(stages[idx]);
+          }
         }
       });
     }, { root: scrollContainer, threshold: 0.6 });
 
     stageColumns.forEach(col => observer.observe(col));
   }
+
+  function updateCsowFooter(stage) {
+    if (csowFill) csowFill.style.width = `${stage.csowPct}%`;
+    if (csowPct) csowPct.textContent = `${stage.csowPct}%`;
+    if (csowText) csowText.textContent = stage.csowText;
+  }
+
+  // Initialize footer
+  if (stages.length > 0) updateCsowFooter(stages[0]);
 
   // ── Detail Panel ──
   const overlay = document.getElementById('detail-overlay');
@@ -1029,7 +1214,7 @@ const tagColors: Record<string, string> = {
     }
   });
 
-  // Escape key
+  // Escape key + arrow keys
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeDetail();
     if (overlay?.classList.contains('open')) {
@@ -1073,14 +1258,27 @@ const tagColors: Record<string, string> = {
       <div class="detail-narrative">${persona.fullNarrative}</div>
     </div>`;
 
-    // Screens
+    // Screens — FIX: grouped by flow
     if (stage.screens.length > 0) {
+      const grouped = {};
+      stage.screens.forEach(s => {
+        if (!grouped[s.flow]) grouped[s.flow] = [];
+        grouped[s.flow].push(s);
+      });
       html += `<div class="detail-section">
-        <div class="detail-section-title">Screen References</div>
-        <div class="detail-chip-grid">
-          ${stage.screens.map(s => `<span class="detail-chip">${s.label}</span>`).join('')}
-        </div>
-      </div>`;
+        <div class="detail-section-title">Screen References</div>`;
+      const flowOrder = ['contractor', 'homeowner', 'post-acceptance', 'core-platform'];
+      flowOrder.forEach(flow => {
+        if (grouped[flow]) {
+          html += `<div class="detail-flow-group">
+            <div class="detail-flow-label">${flowLabels[flow] || flow}</div>
+            <div class="detail-chip-grid">
+              ${grouped[flow].map(s => `<span class="detail-chip flow-${flow}">${s.label}</span>`).join('')}
+            </div>
+          </div>`;
+        }
+      });
+      html += `</div>`;
     }
 
     // Data flow
@@ -1141,5 +1339,6 @@ const tagColors: Record<string, string> = {
     </div>`;
 
     detailBody.innerHTML = html;
+    detailBody.scrollTop = 0;
   }
 </script>
