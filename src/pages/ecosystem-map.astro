@@ -81,11 +81,23 @@ import { ecosystemNodes, connections, dataFlowGroups } from '../data/ecosystem-n
     </div>
   </div>
 
-  <!-- Detail Panel Overlay -->
+  <!-- Detail Panel Overlay (fallback for nodes without mocks) -->
   <div class="detail-overlay" id="detailOverlay">
     <div class="detail-panel" id="detailPanel">
       <button class="detail-close" id="detailClose">&times;</button>
       <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <!-- Mock Viewer Overlay (for nodes with interactive mocks) -->
+  <div class="mock-overlay" id="mockOverlay">
+    <div class="mock-viewer">
+      <div class="mock-toolbar">
+        <div class="mock-node-name" id="mockNodeName"></div>
+        <div class="mock-tabs" id="mockTabs"></div>
+        <button class="mock-close" id="mockClose">&times;</button>
+      </div>
+      <iframe class="mock-frame" id="mockFrame" sandbox="allow-scripts allow-same-origin"></iframe>
     </div>
   </div>
 
@@ -595,10 +607,116 @@ import { ecosystemNodes, connections, dataFlowGroups } from '../data/ecosystem-n
       display: none;
     }
   }
+
+  /* ===== Mock Viewer ===== */
+  .mock-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+  }
+
+  .mock-overlay:global(.visible) {
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .mock-viewer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mock-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .mock-node-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .mock-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+
+  :global(.mock-tab) {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  :global(.mock-tab:hover:not(.disabled)) {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  :global(.mock-tab.active) {
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  :global(.mock-tab.disabled) {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .mock-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .mock-close:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: var(--text-bright);
+  }
+
+  .mock-frame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    background: #fff;
+  }
 </style>
 
 <script>
-  import { ecosystemNodes, connections, type EcosystemNode } from '../data/ecosystem-nodes';
+  import { ecosystemNodes, connections, screenMockMap, screenLabels, type EcosystemNode, type NodeDetail } from '../data/ecosystem-nodes';
 
   // ========== STATE ==========
   let srsVisible = false;
@@ -791,7 +909,10 @@ import { ecosystemNodes, connections, dataFlowGroups } from '../data/ecosystem-n
     });
   }
 
-  // ========== DETAIL PANEL ==========
+  // ========== DETAIL PANEL / MOCK VIEWER ==========
+  const _base = import.meta.env.BASE_URL;
+  const basePath = _base.endsWith('/') ? _base : _base + '/';
+
   function showDetail(nodeId: string) {
     const data = nodeMap.get(nodeId);
     if (!data) return;
@@ -802,7 +923,17 @@ import { ecosystemNodes, connections, dataFlowGroups } from '../data/ecosystem-n
     selectedNodeId = nodeId;
     document.querySelector(`[data-node-wrapper="${nodeId}"] .card`)?.classList.add('selected');
 
-    const detail = data.detail;
+    // Check if node has any screens with available mocks
+    const hasMocks = data.detail.screens.some(s => screenMockMap[s]);
+
+    if (hasMocks) {
+      showMockViewer(data);
+    } else {
+      showTextDetail(data.detail);
+    }
+  }
+
+  function showTextDetail(detail: NodeDetail) {
     const html = `
       <div class="detail-title">${detail.title}</div>
       <div class="detail-subtitle">${detail.subtitle}</div>
@@ -865,6 +996,62 @@ import { ecosystemNodes, connections, dataFlowGroups } from '../data/ecosystem-n
     overlay?.classList.add('visible');
   }
 
+  function showMockViewer(node: EcosystemNode) {
+    const mockOverlay = document.getElementById('mockOverlay');
+    const mockNodeName = document.getElementById('mockNodeName');
+    const mockTabs = document.getElementById('mockTabs');
+    const mockFrame = document.getElementById('mockFrame') as HTMLIFrameElement;
+    if (!mockOverlay || !mockNodeName || !mockTabs || !mockFrame) return;
+
+    mockNodeName.textContent = node.name;
+
+    // Build tabs — deduplicate by mock file so we don't show redundant tabs
+    const seenMocks = new Set<string>();
+    let firstMockFile = '';
+    let tabsHtml = '';
+
+    node.detail.screens.forEach(s => {
+      const mockFile = screenMockMap[s];
+      const label = screenLabels[s] || s.replace('.html', '');
+
+      if (mockFile) {
+        if (seenMocks.has(mockFile)) return; // skip duplicate mock
+        seenMocks.add(mockFile);
+        const isFirst = firstMockFile === '';
+        if (isFirst) firstMockFile = mockFile;
+        tabsHtml += `<button class="mock-tab${isFirst ? ' active' : ''}" data-mock-file="${mockFile}">${label}</button>`;
+      } else {
+        tabsHtml += `<button class="mock-tab disabled" title="Mock not available">${label}</button>`;
+      }
+    });
+
+    mockTabs.innerHTML = tabsHtml;
+    mockFrame.src = `${basePath}mocks/${firstMockFile}`;
+
+    // Tab click handlers
+    mockTabs.querySelectorAll('.mock-tab:not(.disabled)').forEach(tab => {
+      tab.addEventListener('click', () => {
+        mockTabs.querySelectorAll('.mock-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const file = (tab as HTMLElement).dataset.mockFile;
+        if (file) mockFrame.src = `${basePath}mocks/${file}`;
+      });
+    });
+
+    mockOverlay.classList.add('visible');
+  }
+
+  function closeMockViewer() {
+    const mockOverlay = document.getElementById('mockOverlay');
+    const mockFrame = document.getElementById('mockFrame') as HTMLIFrameElement;
+    mockOverlay?.classList.remove('visible');
+    if (mockFrame) mockFrame.src = 'about:blank';
+    if (selectedNodeId) {
+      document.querySelector(`[data-node-wrapper="${selectedNodeId}"] .card`)?.classList.remove('selected');
+      selectedNodeId = null;
+    }
+  }
+
   function closeDetail() {
     const overlay = document.getElementById('detailOverlay');
     overlay?.classList.remove('visible');
@@ -875,6 +1062,7 @@ import { ecosystemNodes, connections, dataFlowGroups } from '../data/ecosystem-n
   }
 
   function setupDetailPanel() {
+    // Text detail overlay
     document.getElementById('detailOverlay')?.addEventListener('click', (e) => {
       if (e.target === document.getElementById('detailOverlay')) {
         closeDetail();
@@ -883,6 +1071,15 @@ import { ecosystemNodes, connections, dataFlowGroups } from '../data/ecosystem-n
     document.getElementById('detailClose')?.addEventListener('click', closeDetail);
     document.getElementById('detailPanel')?.addEventListener('click', (e) => {
       e.stopPropagation();
+    });
+
+    // Mock viewer
+    document.getElementById('mockClose')?.addEventListener('click', closeMockViewer);
+    document.getElementById('mockOverlay')?.addEventListener('click', (e) => {
+      // Only close if clicking directly on the overlay (not toolbar or iframe)
+      if (e.target === document.getElementById('mockOverlay')) {
+        closeMockViewer();
+      }
     });
   }
 
@@ -928,6 +1125,7 @@ import { ecosystemNodes, connections, dataFlowGroups } from '../data/ecosystem-n
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeDetail();
+        closeMockViewer();
         if (dataFlowVisible) {
           const dfPanel = document.getElementById('dataFlowPanel');
           const dfBtn = document.getElementById('dataFlowToggle');

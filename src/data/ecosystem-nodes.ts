@@ -612,6 +612,53 @@ export const dataFlowGroups: DataFlowGroup[] = [
   },
 ];
 
+// ========== SCREEN MOCK MAPPING ==========
+
+/** Maps screen reference names from node data → actual mock filenames in /public/mocks/ */
+export const screenMockMap: Record<string, string> = {
+  // Direct matches
+  'ecom2-build-entry.html': 'ecom2-build-entry.html',
+  'ecom2-dashboard-v2.html': 'ecom2-dashboard-v2.html',
+  'ecom2-nl-empty-state.html': 'ecom2-nl-empty-state.html',
+  'ecom2-nl-processing.html': 'ecom2-nl-processing.html',
+  'ecom2-build-flow.html': 'ecom2-build-flow.html',
+  'ecom2-build-structured.html': 'ecom2-build-structured.html',
+  'ecom2-order-confirmation.html': 'ecom2-order-confirmation.html',
+  'ecom2-estimate-entry.html': 'ecom2-estimate-entry.html',
+  'ecom2-proposal-builder.html': 'ecom2-proposal-builder.html',
+  'ecom2-proposal-preview.html': 'ecom2-proposal-preview.html',
+  'ecom2-template-selector.html': 'ecom2-template-selector.html',
+  'ecom2-reorder-job.html': 'ecom2-reorder-job.html',
+  // ATB remaps (data uses ATB names, mocks use ecom2 names)
+  'atb-address-entry.html': 'ecom2-estimate-entry.html',
+  'atb-proposal-builder.html': 'ecom2-proposal-builder.html',
+  'atb-proposal-preview.html': 'ecom2-proposal-preview.html',
+  'atb-proposal-sent.html': 'ecom2-order-confirmation.html',
+};
+
+/** Human-readable labels for screen tabs */
+export const screenLabels: Record<string, string> = {
+  'ecom2-dashboard-v2.html': 'Dashboard',
+  'ecom2-build-entry.html': 'Build Entry',
+  'ecom2-nl-empty-state.html': 'NL Empty State',
+  'ecom2-nl-processing.html': 'NL Processing',
+  'ecom2-build-flow.html': 'Build Flow',
+  'ecom2-build-structured.html': 'Structured Build',
+  'ecom2-estimate-entry.html': 'Address Entry',
+  'ecom2-proposal-builder.html': 'Proposal Builder',
+  'ecom2-proposal-preview.html': 'Proposal Preview',
+  'ecom2-order-confirmation.html': 'Order Confirmation',
+  'ecom2-template-selector.html': 'Template Selector',
+  'ecom2-reorder-job.html': 'Reorder from Job',
+  'atb-address-entry.html': 'Address Entry',
+  'atb-measurement-payment.html': 'Measurement & Payment',
+  'atb-bid-perfect-results.html': 'Bid Perfect Results',
+  'atb-proposal-builder.html': 'Proposal Builder',
+  'atb-markup-pricing.html': 'Markup & Pricing',
+  'atb-proposal-preview.html': 'Proposal Preview',
+  'atb-proposal-sent.html': 'Proposal Sent',
+};
+
 // ========== HELPER ==========
 
 export function getNodeById(id: string): EcosystemNode | undefined {
