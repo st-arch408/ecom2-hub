@@ -215,7 +215,7 @@ const flowLabels: Record<string, string> = {
     border-bottom: 1px solid var(--border);
     overflow-x: auto;
     position: sticky;
-    top: 56px;
+    top: 0;
     z-index: 80;
   }
 
@@ -1133,23 +1133,35 @@ const flowLabels: Record<string, string> = {
 
   if (scrollContainer) {
     const stageColumns = scrollContainer.querySelectorAll('.stage-column');
+    const stageRatios = new Map();
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const stageId = entry.target.getAttribute('data-stage-id');
-          const idx = stages.findIndex(s => s.id === stageId);
-          if (idx >= 0) {
-            activeStageIndex = idx;
-            // Update pills
-            pills.forEach(p => p.classList.remove('active'));
-            const activePill = document.querySelector(`.stage-pill[data-stage="${stageId}"]`);
-            if (activePill) activePill.classList.add('active');
-            // Update CSoW footer
-            updateCsowFooter(stages[idx]);
-          }
+        stageRatios.set(entry.target, entry.intersectionRatio);
+      });
+
+      // Find the stage with the highest intersection ratio
+      let bestTarget = null;
+      let bestRatio = 0;
+      stageRatios.forEach((ratio, target) => {
+        if (ratio > bestRatio) {
+          bestRatio = ratio;
+          bestTarget = target;
         }
       });
-    }, { root: scrollContainer, threshold: 0.6 });
+
+      if (bestTarget && bestRatio > 0.1) {
+        const stageId = bestTarget.getAttribute('data-stage-id');
+        const idx = stages.findIndex(s => s.id === stageId);
+        if (idx >= 0) {
+          activeStageIndex = idx;
+          pills.forEach(p => p.classList.remove('active'));
+          const activePill = document.querySelector(`.stage-pill[data-stage="${stageId}"]`);
+          if (activePill) activePill.classList.add('active');
+          updateCsowFooter(stages[idx]);
+        }
+      }
+    }, { root: scrollContainer, threshold: [0, 0.25, 0.5, 0.75, 1] });
 
     stageColumns.forEach(col => observer.observe(col));
   }
