@@ -2,6 +2,7 @@
 import Artifact from '../layouts/Artifact.astro';
 import ToggleButton from '../components/design-system/ToggleButton.astro';
 import { journeyStages } from '../data/journey-stages';
+import { screenMockMap } from '../data/ecosystem-nodes';
 
 const categoryColors: Record<string, string> = {
   core: 'var(--blue)',
@@ -84,9 +85,12 @@ const flowLabels: Record<string, string> = {
             <div class="layer layer-screens layer-collapsed">
               <h4 class="layer-title">Screens</h4>
               <div class="screen-chips">
-                {stage.screens.map((scr) => (
-                  <span class="screen-chip" data-flow={scr.flow}>{scr.label}</span>
-                ))}
+                {stage.screens.map((scr) => {
+                  const mockFile = screenMockMap[scr.filename];
+                  return mockFile
+                    ? <a class="screen-chip linked" data-flow={scr.flow} href={`https://st-arch408.github.io/mocks-blue/${mockFile}`} target="_blank" rel="noopener">{scr.label}</a>
+                    : <span class="screen-chip" data-flow={scr.flow}>{scr.label}</span>;
+                })}
               </div>
             </div>
           )}
@@ -438,6 +442,18 @@ const flowLabels: Record<string, string> = {
     background: rgba(6, 182, 212, 0.08);
     color: var(--text);
     border: 1px solid rgba(6, 182, 212, 0.15);
+  }
+
+  .screen-chip.linked {
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .screen-chip.linked:hover {
+    background: rgba(6, 182, 212, 0.2);
+    border-color: var(--accent);
+    color: #fff;
   }
 
   .screen-chip[data-flow="contractor"] {
@@ -840,6 +856,18 @@ const flowLabels: Record<string, string> = {
     border-color: rgba(168, 85, 247, 0.15);
   }
 
+  :global(.detail-body .detail-chip.linked) {
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  :global(.detail-body .detail-chip.linked:hover) {
+    border-color: var(--accent);
+    color: #fff;
+    background: rgba(6, 182, 212, 0.2);
+  }
+
   :global(.detail-body .detail-data-row) {
     display: flex;
     align-items: flex-start;
@@ -1027,7 +1055,7 @@ const flowLabels: Record<string, string> = {
   }
 </style>
 
-<script define:vars={{ stages: journeyStages, tagColors, categoryColors }}>
+<script define:vars={{ stages: journeyStages, tagColors, categoryColors, screenMockMap }}>
   // ── State ──
   let currentPersona = 'marcus';
   let currentDetailIndex = -1;
@@ -1285,7 +1313,13 @@ const flowLabels: Record<string, string> = {
           html += `<div class="detail-flow-group">
             <div class="detail-flow-label">${flowLabels[flow] || flow}</div>
             <div class="detail-chip-grid">
-              ${grouped[flow].map(s => `<span class="detail-chip flow-${flow}">${s.label}</span>`).join('')}
+              ${grouped[flow].map(s => {
+                const mockFile = screenMockMap[s.filename];
+                if (mockFile) {
+                  return `<a class="detail-chip flow-${flow} linked" href="https://st-arch408.github.io/mocks-blue/${mockFile}" target="_blank" rel="noopener">${s.label}</a>`;
+                }
+                return `<span class="detail-chip flow-${flow}">${s.label}</span>`;
+              }).join('')}
             </div>
           </div>`;
         }

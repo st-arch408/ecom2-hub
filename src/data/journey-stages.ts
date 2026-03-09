@@ -117,8 +117,8 @@ export const journeyStages: JourneyStage[] = [
       },
     },
     screens: [
-      { filename: 'ecom2-dashboard-v2.html', label: 'Dashboard Hub', flow: 'core-platform' },
-      { filename: 'ecom2-build-entry.html', label: 'Build Entry / Path Selector', flow: 'core-platform' },
+      { filename: 'ecom2-dashboard-v2.html', label: 'View Dashboard', flow: 'core-platform' },
+      { filename: 'ecom2-build-entry.html', label: 'Choose Build Path', flow: 'core-platform' },
     ],
     dataFlow: [
       { tag: 'in', text: 'Contractor profile auto-loaded from CRM (brand prefs, tier, waste defaults)' },
@@ -162,11 +162,11 @@ export const journeyStages: JourneyStage[] = [
       },
     },
     screens: [
-      { filename: 'atb-address-entry.html', label: 'Address Entry', flow: 'contractor' },
-      { filename: 'atb-measurement-payment.html', label: '$20 Bid Perfect Payment', flow: 'contractor' },
-      { filename: 'atb-bid-perfect-results.html', label: 'Roof Measurement Results', flow: 'contractor' },
-      { filename: 'atb-proposal-builder.html', label: 'G/B/B Tier Configuration', flow: 'contractor' },
-      { filename: 'atb-markup-pricing.html', label: 'Labor, Markup, Margin', flow: 'contractor' },
+      { filename: 'atb-address-entry.html', label: 'Enter Address', flow: 'contractor' },
+      { filename: 'atb-measurement-payment.html', label: 'Pay for Report', flow: 'contractor' },
+      { filename: 'atb-bid-perfect-results.html', label: 'View Measurements', flow: 'contractor' },
+      { filename: 'atb-proposal-builder.html', label: 'Configure Tiers', flow: 'contractor' },
+      { filename: 'atb-markup-pricing.html', label: 'Set Markup', flow: 'contractor' },
     ],
     dataFlow: [
       { tag: 'in', text: 'Job address → EagleView API → Bid Perfect report ($20)' },
@@ -214,12 +214,12 @@ export const journeyStages: JourneyStage[] = [
       },
     },
     screens: [
-      { filename: 'ecom2-template-selector.html', label: 'Template Selector Grid', flow: 'core-platform' },
-      { filename: 'ecom2-reorder-job.html', label: 'Reorder from Job', flow: 'core-platform' },
-      { filename: 'ecom2-build-flow.html', label: 'NL Conversational Build', flow: 'core-platform' },
-      { filename: 'ecom2-build-structured.html', label: 'Structured Form Build', flow: 'core-platform' },
-      { filename: 'ecom2-nl-empty-state.html', label: 'NL Empty State', flow: 'core-platform' },
-      { filename: 'ecom2-nl-processing.html', label: 'NL Processing Pipeline', flow: 'core-platform' },
+      { filename: 'ecom2-template-selector.html', label: 'Select Template', flow: 'core-platform' },
+      { filename: 'ecom2-reorder-job.html', label: 'Reorder Materials', flow: 'core-platform' },
+      { filename: 'ecom2-build-flow.html', label: 'Build via Chat', flow: 'core-platform' },
+      { filename: 'ecom2-build-structured.html', label: 'Build via Form', flow: 'core-platform' },
+      { filename: 'ecom2-nl-empty-state.html', label: 'Start Conversation', flow: 'core-platform' },
+      { filename: 'ecom2-nl-processing.html', label: 'Process Request', flow: 'core-platform' },
     ],
     dataFlow: [
       { tag: 'in', text: 'Template Library (L1): Branch-curated regional defaults' },
@@ -267,10 +267,10 @@ export const journeyStages: JourneyStage[] = [
       },
     },
     screens: [
-      { filename: 'atb-proposal-preview.html', label: 'Proposal Preview (ATB)', flow: 'contractor' },
-      { filename: 'ecom2-proposal-preview.html', label: 'Proposal Preview (Ecom)', flow: 'core-platform' },
-      { filename: 'atb-proposal-sent.html', label: 'Proposal Sent Confirmation', flow: 'contractor' },
-      { filename: 'ecom2-proposals-list.html', label: 'Proposals Management List', flow: 'core-platform' },
+      { filename: 'atb-proposal-preview.html', label: 'Preview Proposal', flow: 'contractor' },
+      { filename: 'ecom2-proposal-preview.html', label: 'Preview Proposal', flow: 'core-platform' },
+      { filename: 'atb-proposal-sent.html', label: 'Send Proposal', flow: 'contractor' },
+      { filename: 'ecom2-proposals-list.html', label: 'Manage Proposals', flow: 'core-platform' },
     ],
     dataFlow: [
       { tag: 'in', text: 'Validated Build object (SKU, qty, UoM), contractor ID, branch preference' },
@@ -318,14 +318,14 @@ export const journeyStages: JourneyStage[] = [
       },
     },
     screens: [
-      { filename: 'atb-ho-tier-selection.html', label: 'Homeowner Tier Selection', flow: 'homeowner' },
-      { filename: 'atb-ho-package-detail.html', label: 'Package Detail View', flow: 'homeowner' },
-      { filename: 'atb-ho-signature.html', label: 'E-Sign', flow: 'homeowner' },
-      { filename: 'atb-ho-deposit.html', label: 'Deposit Payment', flow: 'homeowner' },
-      { filename: 'atb-ho-confirmed.html', label: 'Acceptance Confirmed', flow: 'homeowner' },
-      { filename: 'atb-material-order.html', label: 'Auto Material Order', flow: 'post-acceptance' },
-      { filename: 'atb-job-detail-premium.html', label: 'Job Detail w/ Premium', flow: 'post-acceptance' },
-      { filename: 'ecom2-order-confirmation.html', label: 'Order Confirmation', flow: 'core-platform' },
+      { filename: 'atb-ho-tier-selection.html', label: 'Compare Tiers', flow: 'homeowner' },
+      { filename: 'atb-ho-package-detail.html', label: 'View Package', flow: 'homeowner' },
+      { filename: 'atb-ho-signature.html', label: 'Sign Proposal', flow: 'homeowner' },
+      { filename: 'atb-ho-deposit.html', label: 'Pay Deposit', flow: 'homeowner' },
+      { filename: 'atb-ho-confirmed.html', label: 'Confirm Acceptance', flow: 'homeowner' },
+      { filename: 'atb-material-order.html', label: 'Place Order', flow: 'post-acceptance' },
+      { filename: 'atb-job-detail-premium.html', label: 'View Job Detail', flow: 'post-acceptance' },
+      { filename: 'ecom2-order-confirmation.html', label: 'Confirm Order', flow: 'core-platform' },
     ],
     dataFlow: [
       { tag: 'in', text: 'Homeowner selection (tier, signature, deposit)' },
@@ -374,7 +374,7 @@ export const journeyStages: JourneyStage[] = [
       },
     },
     screens: [
-      { filename: 'atb-delivery-tracking.html', label: 'Real-time Delivery Status', flow: 'post-acceptance' },
+      { filename: 'atb-delivery-tracking.html', label: 'Track Delivery', flow: 'post-acceptance' },
     ],
     dataFlow: [
       { tag: 'in', text: 'Scheduled delivery with branch, route, ETA' },
@@ -464,9 +464,9 @@ export const journeyStages: JourneyStage[] = [
       },
     },
     screens: [
-      { filename: 'ecom2-job-complete-margin.html', label: 'Job Complete + Margin', flow: 'core-platform' },
-      { filename: 'ecom2-jobs-list.html', label: 'Jobs List View', flow: 'core-platform' },
-      { filename: 'ecom2-jobs-list-options.html', label: 'Jobs List Options', flow: 'core-platform' },
+      { filename: 'ecom2-job-complete-margin.html', label: 'Review Margin', flow: 'core-platform' },
+      { filename: 'ecom2-jobs-list.html', label: 'View Jobs', flow: 'core-platform' },
+      { filename: 'ecom2-jobs-list-options.html', label: 'Filter Jobs', flow: 'core-platform' },
     ],
     dataFlow: [
       { tag: 'out', text: 'Write-back to CRM: job events, materials ordered vs estimated, Build activity, ATB usage, delivery outcome, payment' },

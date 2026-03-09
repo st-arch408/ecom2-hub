@@ -24,6 +24,7 @@ export interface NodeDetail {
   description: string;
   metrics: { label: string; value: string; target: string }[];
   screens: string[];
+  prototype?: string;
   status: string;
   source: string;
   comp: { qxo: string; srs: string };
@@ -104,6 +105,7 @@ export const ecosystemNodes: EcosystemNode[] = [
         { label: '$20 Pricing', value: 'Flat rate', target: 'Below any CRM subscription' },
       ],
       screens: ['atb-address-entry.html', 'atb-measurement-payment.html', 'atb-bid-perfect-results.html', 'atb-proposal-builder.html', 'atb-markup-pricing.html', 'atb-proposal-preview.html', 'atb-proposal-sent.html'],
+      prototype: 'https://atb-blue.vercel.app',
       status: 'Active project \u2014 7 contractor screens mocked, prototype built',
       source: 'QXO Ecom 2.0 Platform Overview Sections 3-6, ATB Blue Analysis',
       comp: {
@@ -636,27 +638,43 @@ export const screenMockMap: Record<string, string> = {
   'atb-proposal-sent.html': 'ecom2-order-confirmation.html',
 };
 
-/** Human-readable labels for screen tabs */
+/** Human-readable labels for screen tabs — action-verb style */
 export const screenLabels: Record<string, string> = {
-  'ecom2-dashboard-v2.html': 'Dashboard',
-  'ecom2-build-entry.html': 'Build Entry',
-  'ecom2-nl-empty-state.html': 'NL Empty State',
-  'ecom2-nl-processing.html': 'NL Processing',
-  'ecom2-build-flow.html': 'Build Flow',
-  'ecom2-build-structured.html': 'Structured Build',
-  'ecom2-estimate-entry.html': 'Address Entry',
-  'ecom2-proposal-builder.html': 'Proposal Builder',
-  'ecom2-proposal-preview.html': 'Proposal Preview',
-  'ecom2-order-confirmation.html': 'Order Confirmation',
-  'ecom2-template-selector.html': 'Template Selector',
-  'ecom2-reorder-job.html': 'Reorder from Job',
-  'atb-address-entry.html': 'Address Entry',
-  'atb-measurement-payment.html': 'Measurement & Payment',
-  'atb-bid-perfect-results.html': 'Bid Perfect Results',
-  'atb-proposal-builder.html': 'Proposal Builder',
-  'atb-markup-pricing.html': 'Markup & Pricing',
-  'atb-proposal-preview.html': 'Proposal Preview',
-  'atb-proposal-sent.html': 'Proposal Sent',
+  // Core platform screens
+  'ecom2-dashboard-v2.html': 'View Dashboard',
+  'ecom2-build-entry.html': 'Choose Build Path',
+  'ecom2-nl-empty-state.html': 'Start Conversation',
+  'ecom2-nl-processing.html': 'Process Request',
+  'ecom2-build-flow.html': 'Build via Chat',
+  'ecom2-build-structured.html': 'Build via Form',
+  'ecom2-estimate-entry.html': 'Enter Address',
+  'ecom2-proposal-builder.html': 'Configure Tiers',
+  'ecom2-proposal-preview.html': 'Preview Proposal',
+  'ecom2-order-confirmation.html': 'Confirm Order',
+  'ecom2-template-selector.html': 'Select Template',
+  'ecom2-reorder-job.html': 'Reorder Materials',
+  'ecom2-jobs-list.html': 'View Jobs',
+  'ecom2-jobs-list-options.html': 'Filter Jobs',
+  'ecom2-job-complete-margin.html': 'Review Margin',
+  'ecom2-proposals-list.html': 'Manage Proposals',
+  // ATB contractor screens
+  'atb-address-entry.html': 'Enter Address',
+  'atb-measurement-payment.html': 'Pay for Report',
+  'atb-bid-perfect-results.html': 'View Measurements',
+  'atb-proposal-builder.html': 'Configure Tiers',
+  'atb-markup-pricing.html': 'Set Markup',
+  'atb-proposal-preview.html': 'Preview Proposal',
+  'atb-proposal-sent.html': 'Send Proposal',
+  // ATB homeowner screens
+  'atb-ho-tier-selection.html': 'Compare Tiers',
+  'atb-ho-package-detail.html': 'View Package',
+  'atb-ho-signature.html': 'Sign Proposal',
+  'atb-ho-deposit.html': 'Pay Deposit',
+  'atb-ho-confirmed.html': 'Confirm Acceptance',
+  // Post-acceptance screens
+  'atb-material-order.html': 'Place Order',
+  'atb-job-detail-premium.html': 'View Job Detail',
+  'atb-delivery-tracking.html': 'Track Delivery',
 };
 
 // ========== HELPER ==========

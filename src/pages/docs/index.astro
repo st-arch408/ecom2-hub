@@ -36,12 +36,12 @@ const workstreamColors: Record<string, string> = {
   <div class="docs-page">
     <div class="docs-header">
       <h1 class="docs-title">PR/FAQ Documents</h1>
-      <p class="docs-subtitle">Working Backwards documents rendered with QXO Dark Intelligence styling. Drop a <code>.md</code> file into <code>src/content/prfaq/</code> to add a new document.</p>
+      <p class="docs-subtitle">Working Backwards documents rendered with QXO Dark Intelligence styling. Documents appear here automatically once they move past draft status on the ecosystem map.</p>
     </div>
 
     {sortedDocs.length === 0 ? (
       <div class="docs-empty">
-        <p>No documents yet. Add markdown files to <code>src/content/prfaq/</code> to get started.</p>
+        <p>No documents yet. Documents will appear here as they are added to the ecosystem.</p>
       </div>
     ) : (
       <Fragment>
