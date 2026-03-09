@@ -73,7 +73,7 @@ export const ecosystemNodes: EcosystemNode[] = [
         { label: 'Job Lifecycle', value: '9 phases', target: 'Full coverage' },
         { label: 'Data Model', value: 'Address-anchored', target: 'Multi-trade ready' },
       ],
-      screens: ['ecom2-jobs-list.html', 'ecom2-jobs-list-options.html', 'ecom2-job-complete-margin.html'],
+      screens: ['ecom2-jobs-list.html', 'ecom2-jobs-list-options.html', 'ecom2-job-complete-margin.html', 'atb-job-detail-premium.html'],
       status: 'Active project \u2014 core to Ecom 2.0 platform',
       source: 'QXO Ecom 2.0 Platform Overview, Section 8',
       comp: {
@@ -631,6 +631,10 @@ export const screenMockMap: Record<string, string> = {
   'ecom2-proposal-preview.html': 'ecom2-proposal-preview.html',
   'ecom2-template-selector.html': 'ecom2-template-selector.html',
   'ecom2-reorder-job.html': 'ecom2-reorder-job.html',
+  'ecom2-jobs-list.html': 'ecom2-jobs-list.html',
+  'ecom2-jobs-list-options.html': 'ecom2-jobs-list-options.html',
+  'ecom2-job-complete-margin.html': 'ecom2-job-complete-margin.html',
+  'atb-job-detail-premium.html': 'atb-job-detail-premium.html',
   // ATB remaps (data uses ATB names, mocks use ecom2 names)
   'atb-address-entry.html': 'ecom2-estimate-entry.html',
   'atb-proposal-builder.html': 'ecom2-proposal-builder.html',
